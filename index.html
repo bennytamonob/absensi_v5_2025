@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Absensi Modern</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet JS & CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: 'var(--primary-color)',
+                        'primary-hover': 'var(--primary-hover-color)',
+                        surface: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style id="theme-style">
+        :root {
+            --primary-color: #4f46e5; /* Indigo-600 */
+            --primary-hover-color: #4338ca; /* Indigo-700 */
+            --primary-active-color: #3730a3; /* Indigo-800 */
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            background-color: #f1f5f9;
+        }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; } 
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Sidebar Styling */
+        .sidebar-item { transition: all 0.2s ease; border-right: 3px solid transparent; color: #94a3b8; }
+        .sidebar-item:hover { background-color: rgba(255,255,255, 0.05); color: white; }
+        .sidebar-item.active { 
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 0%, transparent 100%);
+            border-right-color: var(--primary-color); 
+            color: #ffffff; 
+            font-weight: 600; 
+        }
+        .sidebar-item.active i { color: var(--primary-color); }
+
+        /* Buttons */
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover { 
+            background-color: var(--primary-hover-color); 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Glassmorphism & Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .modern-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .modern-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+
+        /* Map Popup */
+        .custom-popup .leaflet-popup-content-wrapper { 
+            background: #ffffff; 
+            color: #1e293b; 
+            border-radius: 12px; 
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+        }
+        .custom-popup .leaflet-popup-content { margin: 0; }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        /* Loader */
+        .loader-dots div {
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 56px; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+
+    </style>
+</head>
+<body class="text-slate-600 bg-slate-50 h-screen overflow-hidden">
+
+    <!-- ===== LOGIN PAGE (Redesigned) ===== -->
+    <div id="login-page" class="flex min-h-screen w-full">
+        <!-- Left Side: Login Form -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center bg-white p-8 lg:p-12 z-10">
+            <div class="w-full max-w-md space-y-8 fade-in">
+                <div class="text-center">
+                    <img id="login-logo" src="https://iili.io/KEWlfNp.png" alt="Logo" class="h-16 mx-auto mb-6 object-contain" onerror="this.src='https://placehold.co/150x50/3498db/ffffff?text=Logo'">
+                    <h1 id="login-app-name" class="text-3xl font-bold text-slate-900 tracking-tight">Selamat Datang</h1>
+                    <p class="text-slate-500 mt-2">Masuk untuk mengelola kehadiran Anda</p>
+                </div>
+
+                <form id="login-form" class="mt-8 space-y-6">
+                    <div class="space-y-5">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Perusahaan</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <input type="email" id="email" name="email" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors" placeholder="nama@perusahaan.com">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <input type="password" id="password" name="password" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="office-location" class="block text-sm font-medium text-slate-700 mb-1">Lokasi Kantor</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <select id="office-location" name="officeLocation" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors appearance-none">
+                                    <option value="">Memuat lokasi...</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-500/30">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fas fa-sign-in-alt group-hover:text-indigo-200 transition-colors"></i>
+                        </span>
+                        Masuk ke Dashboard
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Right Side: Decorative -->
+        <div class="hidden lg:flex w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-slate-900 opacity-90"></div>
+            <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; mix-blend-mode: overlay;"></div>
+            <div class="relative z-10 text-center px-12">
+                <h2 class="text-4xl font-bold text-white mb-6">Efisiensi dalam Genggaman</h2>
+                <p class="text-indigo-100 text-lg leading-relaxed">Sistem absensi terintegrasi dengan geolokasi presisi dan pelaporan *real-time* untuk produktivitas tim yang lebih baik.</p>
+            </div>
+            <!-- Decorative Circles -->
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD PAGE (Redesigned) ===== -->
+    <div id="dashboard-page" class="hidden h-screen flex flex-col md:flex-row overflow-hidden bg-slate-50">
+        
+        <!-- Mobile Menu Overlay -->
+        <div id="menu-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
+            <!-- Sidebar Header -->
+            <div class="h-20 flex items-center px-8 border-b border-slate-800 bg-slate-900">
+                <img id="dashboard-logo" src="https://iili.io/KEWlfNp.png" alt="Logo" class="h-8 object-contain brightness-0 invert" onerror="this.src='https://placehold.co/150x50/3498db/ffffff?text=Logo'">
+            </div>
+            
+            <!-- Sidebar Nav -->
+            <nav class="flex-1 overflow-y-auto py-6 space-y-1 px-3 custom-scrollbar">
+                <div class="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu Utama</div>
+                <a href="#home" class="sidebar-item active flex items-center px-4 py-3.5 rounded-xl group" data-view="home-view">
+                    <i class="fas fa-home w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="#cuti" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="cuti-view">
+                    <i class="fas fa-calendar-check w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="font-medium">Pengajuan Cuti</span>
+                </a>
+
+                <div id="user-menu">
+                    <div class="mt-8 px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Karyawan</div>
+                    <a href="#users" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="users-view" data-permission="canManageUsers">
+                        <i class="fas fa-users w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="font-medium">Manajemen User</span>
+                    </a>
+                    <a href="#attendance-data" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="attendance-data-view" data-permission="canSeeAttendanceData">
+                        <i class="fas fa-clipboard-list w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="font-medium">Data Absensi</span>
+                    </a>
+                    <a href="#employee-locations" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="employee-locations-view" data-permission="canSeeEmployeeLocations">
+                        <i class="fas fa-map-marked-alt w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="font-medium">Lokasi Live</span>
+                    </a>
+                </div>
+
+                <div id="admin-menu">
+                    <div class="mt-8 px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Administrator</div>
+                    <a href="#settings" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="settings-view" data-permission="canManageSettings">
+                        <i class="fas fa-cog w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="font-medium">Pengaturan</span>
+                    </a>
+                    <a href="#spoof-logs" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="spoof-log-view" data-permission="canSeeSpoofLogs">
+                        <i class="fas fa-shield-alt w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="font-medium">Keamanan GPS</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+                <button id="logout-btn" class="flex items-center w-full px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-xl transition-colors">
+                    <i class="fas fa-sign-out-alt w-8 text-center"></i>
+                    <span class="font-medium">Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Top Header -->
+            <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-30">
+                <div class="flex items-center gap-4">
+                    <button id="menu-btn" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 focus:outline-none md:hidden rounded-lg hover:bg-slate-100">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800" id="dashboard-app-name">Dashboard</h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">Overview performa absensi hari ini</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <div class="text-right hidden sm:block">
+                        <p id="current-time" class="text-lg font-bold text-slate-800 font-mono tracking-tight leading-none"></p>
+                        <p id="current-date" class="text-xs text-slate-500 font-medium uppercase tracking-wide mt-1"></p>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                    <div class="flex items-center gap-3 pl-2">
+                        <div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-sm">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="hidden sm:block">
+                            <p class="text-sm font-bold text-slate-800 leading-tight" id="user-name-display">User</p>
+                            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 mt-1 inline-block" id="user-role-display">Role</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Scroll Area -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 scroll-smooth">
+                
+                <!-- Home View -->
+                <div id="home-view" class="content-view fade-in max-w-7xl mx-auto space-y-6">
+                    <!-- Status Alert -->
+                    <div id="attendance-status-alert" class="hidden rounded-xl shadow-sm border-l-4 p-4 flex items-start" role="alert"></div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Column: Action Card -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Attendance Action Card -->
+                            <div class="modern-card p-6 md:p-8 bg-gradient-to-r from-white to-slate-50">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h2 class="text-xl font-bold text-slate-800">Presensi Harian</h2>
+                                        <p class="text-slate-500 text-sm mt-1"><i class="fas fa-map-marker-alt mr-1 text-indigo-500"></i> Lokasi: <span id="current-office-location" class="font-semibold text-slate-700">Memuat...</span></p>
+                                    </div>
+                                    <div id="location-status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                        Mendeteksi GPS...
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                    <button id="check-in-btn" class="group relative overflow-hidden bg-emerald-500 hover:bg-emerald-600 text-white p-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left">
+                                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-sign-in-alt text-8xl"></i>
+                                        </div>
+                                        <div class="relative z-10">
+                                            <div class="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
+                                                <i class="fas fa-fingerprint text-2xl"></i>
+                                            </div>
+                                            <h3 class="text-xl font-bold">Absen Masuk</h3>
+                                            <p class="text-emerald-100 text-sm mt-1">Mulai jam kerja Anda</p>
+                                        </div>
+                                    </button>
+
+                                    <button id="check-out-btn" class="group relative overflow-hidden bg-rose-500 hover:bg-rose-600 text-white p-6 rounded-2xl shadow-lg shadow-rose-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left">
+                                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-sign-out-alt text-8xl"></i>
+                                        </div>
+                                        <div class="relative z-10">
+                                            <div class="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
+                                                <i class="fas fa-running text-2xl"></i>
+                                            </div>
+                                            <h3 class="text-xl font-bold">Absen Keluar</h3>
+                                            <p class="text-rose-100 text-sm mt-1">Selesaikan hari ini</p>
+                                        </div>
+                                    </button>
+                                </div>
+                                
+                                <div class="border-t border-slate-100 pt-4 flex items-center text-sm text-slate-500">
+                                    <i class="fas fa-history mr-2 text-slate-400"></i>
+                                    <span id="last-attendance-info">Memuat riwayat...</span>
+                                </div>
+                            </div>
+
+                            <!-- Map Section -->
+                            <div class="modern-card p-1 overflow-hidden">
+                                <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                                    <h3 class="font-bold text-slate-800">Peta Lokasi</h3>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                        <span class="text-xs text-slate-500">Live</span>
+                                    </div>
+                                </div>
+                                <div class="h-80 w-full bg-slate-100 rounded-b-xl z-0 relative" id="map"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Stats & Info -->
+                        <div class="space-y-6">
+                            <!-- GPS Status Card -->
+                            <div class="modern-card p-6">
+                                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Status GPS</h3>
+                                <div class="flex items-center justify-center py-4">
+                                    <div class="relative">
+                                        <div class="w-32 h-32 rounded-full border-4 border-slate-100 flex items-center justify-center">
+                                            <i class="fas fa-satellite-dish text-4xl text-slate-300"></i>
+                                        </div>
+                                        <div id="radar-animation" class="absolute inset-0 border-4 border-indigo-500 rounded-full opacity-0 animate-ping"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-2">
+                                    <p id="location-status" class="font-bold text-slate-800">Mencari sinyal...</p>
+                                    <p id="distance-info" class="text-sm text-slate-500 mt-1">Menunggu koordinat...</p>
+                                </div>
+                            </div>
+
+                            <!-- Chart Card -->
+                            <div class="modern-card p-6">
+                                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Statistik Kehadiran</h3>
+                                <div class="h-48">
+                                    <canvas id="attendanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Placeholder containers for dynamic views (Maintained IDs) -->
+                <div id="users-view" class="content-view fade-in hidden"></div>
+                <div id="attendance-data-view" class="content-view fade-in hidden"></div>
+                <div id="settings-view" class="content-view fade-in hidden"></div>
+                <div id="spoof-log-view" class="content-view fade-in hidden"></div>
+                <div id="employee-locations-view" class="content-view fade-in hidden"></div>
+                <div id="cuti-view" class="content-view fade-in hidden"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ===== MODALS (Redesigned) ===== -->
+    
+    <!-- Loader Modal -->
+    <div id="loader-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[1003] transition-opacity">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4">
+            <div class="loader-dots relative w-20 h-5 mb-4">
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
+            </div>
+            <p id="loader-text" class="text-slate-700 font-semibold text-lg animate-pulse">Memproses...</p>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1002] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all scale-100 overflow-hidden">
+            <div class="p-6 text-center">
+                <div id="notification-icon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-indigo-100 text-indigo-600 text-3xl">
+                    <i class="fas fa-info"></i>
+                </div>
+                <h3 id="notification-title" class="text-xl font-bold text-slate-900 mb-2">Notification</h3>
+                <p id="notification-message" class="text-sm text-slate-500 mb-6">Message goes here...</p>
+                <div id="notification-buttons" class="grid grid-cols-1 gap-3">
+                    <button id="notification-close-btn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:text-sm">
+                        Mengerti
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selfie Modal -->
+    <div id="selfie-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-[1001] p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800">Verifikasi Foto</h3>
+                <button onclick="document.getElementById('selfie-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-0 relative bg-black flex-grow flex items-center justify-center group">
+                <video id="video-preview" class="w-full h-full object-cover transform scale-x-[-1]" autoplay playsinline></video>
+                <canvas id="selfie-canvas" class="hidden"></canvas>
+                <div class="absolute inset-0 border-[30px] border-black/30 pointer-events-none rounded-none"></div>
+                <div class="absolute inset-0 border-2 border-white/50 m-8 rounded-xl pointer-events-none border-dashed opacity-50"></div>
+            </div>
+            <div class="p-6 bg-white border-t border-slate-100 flex gap-4">
+                <button id="cancel-capture-btn" class="flex-1 px-4 py-3 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
+                    Batal
+                </button>
+                <button id="capture-btn" class="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition-all transform active:scale-95 flex items-center justify-center">
+                    <i class="fas fa-camera mr-2"></i> Ambil & Absen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Form Modal -->
+    <div id="user-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-lg w-full transform transition-all">
+            <h3 id="user-form-title" class="text-2xl font-bold text-slate-800 mb-6">Form User</h3>
+            <form id="user-form" class="space-y-4">
+                <input type="hidden" id="original-email" name="originalEmail">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="user-nama" name="nama" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="user-email" name="email" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" id="user-password" name="password" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <p class="text-xs text-slate-500 mt-1">Biarkan kosong jika tidak ingin mengubah password.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                    <div class="relative">
+                        <select id="user-role" name="role" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
+                            <option value="User">User</option>
+                            <option value="HR">HR</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" id="cancel-user-form-btn" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md font-medium">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cuti Form Modal -->
+    <div id="cuti-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-lg w-full">
+            <h3 id="cuti-form-title" class="text-2xl font-bold text-slate-800 mb-6">Form Pengajuan Cuti</h3>
+            <form id="cuti-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Cuti</label>
+                    <select id="cuti-jenis" name="jenisCuti" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="cuti-mulai" name="tanggalMulai" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Selesai</label>
+                        <input type="date" id="cuti-selesai" name="tanggalSelesai" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan / Alasan</label>
+                    <textarea id="cuti-keterangan" name="keterangan" rows="3" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Jelaskan alasan cuti..."></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" id="cancel-cuti-form-btn" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">Batal</button>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md font-medium">Ajukan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+<script type="module">
+// ================================================================= //
+//         APLIKASI ABSENSI - LOGIC (SAME FUNCTIONALITY)             //
+// ================================================================= //
+
+// --- KONFIGURASI ---
+// PENTING: Ganti URL ini dengan URL Web app dari hasil deployment baru Anda.
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzVCKHZfUnORpoBlh8njCahGDvXbsouO1y2OwnVaDS2rRDx-nBR4v-TMWPMt3Avaxyz/exec';
+
+// --- STATE MANAGEMENT ---
+let currentUser = null;
+let appSettings = null;
+let officeLocations = [];
+let rolePermissions = [];
+let selectedOffice = null;
+let attendanceData = [];
+let map = null;
+let employeeMap = null;
+let attendanceChart = null;
+let lastPosition = null;
+let clockInterval = null;
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    checkSession();
+    setupEventListeners();
+});
+
+async function checkSession() {
+    const user = sessionStorage.getItem('currentUser');
+    const office = sessionStorage.getItem('selectedOffice');
+    const storedTheme = localStorage.getItem('appTheme') || 'blue';
+    applyTheme(storedTheme);
+    if (user && office) {
+        currentUser = JSON.parse(user);
+        selectedOffice = JSON.parse(office);
+        initDashboard();
+    } else {
+        initLoginPage();
+    }
+}
+
+async function initLoginPage() {
+    showLoader('Memuat data...');
+    try {
+        const [settings, offices] = await Promise.all([
+            apiCall({ action: 'getSettings' }),
+            apiCall({ action: 'getOffices' })
+        ]);
+        appSettings = settings;
+        officeLocations = offices;
+        applyTheme(settings.themeColor || 'blue');
+        localStorage.setItem('appTheme', settings.themeColor || 'blue');
+        
+        // Update branding elements
+        const logo = document.getElementById('login-logo');
+        if(logo) logo.src = settings.logoUrl;
+        
+        const appName = document.getElementById('login-app-name');
+        if(appName) appName.textContent = `Selamat Datang di ${settings.appName}`;
+        
+        document.title = settings.appName;
+        
+        const officeSelect = document.getElementById('office-location');
+        officeSelect.innerHTML = '<option value="">-- Pilih Lokasi Kantor --</option>';
+        offices.forEach(o => {
+            const option = document.createElement('option');
+            option.value = o.nama;
+            option.textContent = o.nama;
+            officeSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error initializing login page:", error);
+        showNotification('error', 'Koneksi Gagal', 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+    } finally {
+        hideLoader();
+    }
+}
+
+function setupEventListeners() {
+    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    
+    // UI Interaction Listeners
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if(menuBtn && sidebar && menuOverlay) {
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const viewId = e.currentTarget.dataset.view;
+            showView(viewId);
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            
+            // Auto close sidebar on mobile
+            if (window.innerWidth < 768 && sidebar) {
+                sidebar.classList.add('-translate-x-full');
+                menuOverlay.classList.add('hidden');
+            }
+        });
+    });
+
+    const checkInBtn = document.getElementById('check-in-btn');
+    if(checkInBtn) checkInBtn.addEventListener('click', () => handleAttendance('Masuk'));
+    
+    const checkOutBtn = document.getElementById('check-out-btn');
+    if(checkOutBtn) checkOutBtn.addEventListener('click', () => handleAttendance('Keluar'));
+    
+    document.getElementById('capture-btn').addEventListener('click', captureSelfie);
+    document.getElementById('cancel-capture-btn').addEventListener('click', cancelCapture);
+    
+    document.getElementById('user-form').addEventListener('submit', handleUserFormSubmit);
+    document.getElementById('cancel-user-form-btn').addEventListener('click', () => document.getElementById('user-form-modal').classList.add('hidden'));
+    
+    document.getElementById('cuti-form').addEventListener('submit', handleCutiFormSubmit);
+    document.getElementById('cancel-cuti-form-btn').addEventListener('click', () => document.getElementById('cuti-form-modal').classList.add('hidden'));
+}
+
+// --- API HELPER ---
+async function apiCall(body) {
+    try {
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        if (result.status === 'error') throw new Error(result.message);
+        return result.data;
+    } catch (error) {
+        console.error('API Call Error:', error);
+        throw error;
+    }
+}
+
+// --- AUTHENTICATION ---
+async function handleLogin(e) {
+    e.preventDefault();
+    showLoader('Verifikasi Akun...');
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const officeName = document.getElementById('office-location').value;
+    
+    if (!officeName) {
+        showNotification('warning', 'Lokasi Belum Dipilih', 'Silakan pilih lokasi kantor Anda untuk melanjutkan.');
+        hideLoader();
+        return;
+    }
+    
+    try {
+        const user = await apiCall({ action: 'login', email, password });
+        currentUser = user;
+        selectedOffice = officeLocations.find(o => o.nama === officeName);
+        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+        sessionStorage.setItem('selectedOffice', JSON.stringify(selectedOffice));
+        initDashboard();
+    } catch (error) {
+        showNotification('error', 'Login Gagal', error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+function handleLogout() {
+    sessionStorage.clear();
+    localStorage.removeItem('appTheme');
+    if(clockInterval) clearInterval(clockInterval);
+    window.location.reload();
+}
+
+// --- DASHBOARD ---
+async function initDashboard() {
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('dashboard-page').classList.remove('hidden');
+    
+    // Tweak to ensure map renders correctly after hidden switch
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 200);
+
+    document.getElementById('user-name-display').textContent = currentUser.nama;
+    document.getElementById('user-role-display').textContent = currentUser.role;
+    document.getElementById('current-office-location').textContent = selectedOffice.nama;
+    
+    updateTime();
+    if(clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(updateTime, 1000);
+    
+    showLoader('Menyiapkan Dashboard...');
+    try {
+        const [settings, offices, data, roles] = await Promise.all([
+            apiCall({ action: 'getSettings' }),
+            apiCall({ action: 'getOffices' }),
+            apiCall({ action: 'getDashboardData', user: currentUser }),
+            apiCall({ action: 'getRoles' })
+        ]);
+        appSettings = settings;
+        officeLocations = offices;
+        rolePermissions = roles;
+        attendanceData = data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        applyRolePermissions();
+        updateUIWithSettings();
+        updateLastAttendanceInfo();
+        checkAttendanceStatus();
+        initMap();
+        initChart();
+        checkLocationStatus();
+    } catch (error) {
+        console.error("Error initializing dashboard:", error);
+        showNotification('error', 'Gagal Memuat Data', error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+function applyRolePermissions() {
+    const userRoleData = rolePermissions.find(r => r.roleName === currentUser.role);
+    if (!userRoleData) {
+        document.getElementById('user-menu').style.display = 'none';
+        document.getElementById('admin-menu').style.display = 'none';
+        return;
+    }
+    
+    document.querySelectorAll('[data-permission]').forEach(el => {
+        const permission = el.dataset.permission;
+        if (userRoleData[permission]) {
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+
+function updateUIWithSettings() {
+    const theme = appSettings.themeColor || 'blue';
+    applyTheme(theme);
+    localStorage.setItem('appTheme', theme);
+    document.title = appSettings.appName;
+    document.getElementById('dashboard-app-name').textContent = appSettings.appName;
+    document.getElementById('dashboard-logo').src = appSettings.logoUrl;
+}
+
+// --- ATTENDANCE PROCESS ---
+async function handleAttendance(status) {
+    showLoader('Mencari Lokasi GPS...');
+    try {
+        const position = await getCurrentPosition();
+        const spoofReason = isGpsSpoof(position);
+        if (spoofReason) {
+            await apiCall({ action: 'logGpsSpoof', data: { 
+                user: currentUser, 
+                location: {latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy}, 
+                reason: spoofReason 
+            }});
+            showNotification('error', 'Keamanan', 'Sistem mendeteksi penggunaan lokasi palsu/mock location.');
+            return;
+        }
+        const distance = calculateDistance(
+            position.coords.latitude, position.coords.longitude,
+            selectedOffice.latitude, selectedOffice.longitude
+        );
+        if (distance > selectedOffice.radius) {
+            showNotification('warning', 'Di Luar Jangkauan', `Anda berada ${Math.round(distance - selectedOffice.radius)} meter dari batas area kantor.`);
+            return;
+        }
+        showSelfieModal(status, position.coords);
+    } catch (error) {
+        showNotification('error', 'Lokasi Tidak Ditemukan', error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+// --- GEOLOCATION & ANTI-SPOOFING ---
+function getCurrentPosition() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Browser tidak mendukung Geolocation.'));
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+        });
+    });
+}
+
+function isGpsSpoof(position) {
+    // Basic checks
+    if (position.coords.accuracy < 3) { // Too perfect
+        return `Akurasi mencurigakan: ${position.coords.accuracy}m`;
+    }
+    const now = new Date().getTime();
+    if (lastPosition) {
+        const timeDiff = (now - lastPosition.timestamp) / 1000;
+        const distanceMoved = calculateDistance(
+            position.coords.latitude, position.coords.longitude,
+            lastPosition.coords.latitude, lastPosition.coords.longitude
+        );
+        const speed = (distanceMoved / timeDiff) * 3.6; // km/h
+        if (speed > 800) { // Plane speed
+             return `Kecepatan perpindahan tidak wajar: ${speed.toFixed(0)} km/h`;
+        }
+    }
+    lastPosition = { coords: position.coords, timestamp: now };
+    return null;
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+async function checkLocationStatus() {
+    const statusEl = document.getElementById('location-status');
+    const distanceEl = document.getElementById('distance-info');
+    const badgeEl = document.getElementById('location-status-badge');
+    const radar = document.getElementById('radar-animation');
+
+    try {
+        const position = await getCurrentPosition();
+        const distance = calculateDistance(
+            position.coords.latitude, position.coords.longitude,
+            selectedOffice.latitude, selectedOffice.longitude
+        );
+        
+        distanceEl.textContent = `Jarak: ${distance.toFixed(0)} meter dari titik pusat.`;
+        
+        if (distance <= selectedOffice.radius) {
+            statusEl.textContent = 'Dalam Area Kantor';
+            statusEl.className = 'font-bold text-emerald-600';
+            if(badgeEl) {
+                badgeEl.textContent = 'Dalam Area';
+                badgeEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 border border-emerald-200';
+            }
+            if(radar) radar.classList.add('border-emerald-500');
+        } else {
+            statusEl.textContent = 'Luar Area Kantor';
+            statusEl.className = 'font-bold text-rose-600';
+            if(badgeEl) {
+                badgeEl.textContent = 'Luar Area';
+                badgeEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-600 border border-rose-200';
+            }
+             if(radar) radar.classList.add('border-rose-500');
+        }
+    } catch (error) {
+        statusEl.textContent = 'GPS Error';
+        statusEl.className = 'font-bold text-slate-400';
+        distanceEl.textContent = 'Gagal mendeteksi lokasi.';
+    }
+}
+
+
+// --- SELFIE CAPTURE ---
+let videoStream = null;
+let attendanceInfo = {};
+
+async function showSelfieModal(status, location) {
+    attendanceInfo = { status, location };
+    const modal = document.getElementById('selfie-modal');
+    const video = document.getElementById('video-preview');
+    modal.classList.remove('hidden');
+    try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        video.srcObject = videoStream;
+    } catch (error) {
+        showNotification('error', 'Kamera Error', 'Izin kamera ditolak atau perangkat tidak ditemukan.');
+        hideSelfieModal();
+    }
+}
+
+function hideSelfieModal() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('selfie-modal').classList.add('hidden');
+}
+
+function cancelCapture() { hideSelfieModal(); }
+
+async function captureSelfie() {
+    showLoader('Mengirim data absensi...');
+    const video = document.getElementById('video-preview');
+    const canvas = document.getElementById('selfie-canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    // Flip horizontal for natural selfie feel if needed, but for data backend keep it standard
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const base64Photo = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+    hideSelfieModal();
+    
+    try {
+        await apiCall({
+            action: 'recordAttendance',
+            data: {
+                user: currentUser,
+                status: attendanceInfo.status,
+                location: attendanceInfo.location,
+                photo: base64Photo,
+                officeLocation: selectedOffice.nama
+            },
+        });
+        showNotification('success', 'Absen Berhasil', `Anda berhasil absen ${attendanceInfo.status}.`);
+        
+        // Refresh Data
+        const data = await apiCall({ action: 'getDashboardData', user: currentUser });
+        attendanceData = data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        updateLastAttendanceInfo();
+        checkAttendanceStatus();
+        refreshMap();
+        initChart();
+    } catch (error) {
+        showNotification('error', 'Gagal Absen', error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+// --- UI UPDATES & VIEWS ---
+function showView(viewId) {
+    document.querySelectorAll('.content-view').forEach(view => view.classList.add('hidden'));
+    const view = document.getElementById(viewId);
+    view.classList.remove('hidden');
+    
+    // Trigger animations or specific loads
+    view.classList.remove('fade-in');
+    void view.offsetWidth; // trigger reflow
+    view.classList.add('fade-in');
+
+    switch(viewId) {
+        case 'users-view': loadUsersView(); break;
+        case 'attendance-data-view': loadAttendanceDataView(); break;
+        case 'settings-view': loadSettingsView(); break;
+        case 'spoof-log-view': loadSpoofLogView(); break;
+        case 'employee-locations-view': loadEmployeeLocationsView(); break;
+        case 'cuti-view': loadCutiView(); break;
+    }
+}
+
+function updateTime() {
+    const timeEl = document.getElementById('current-time');
+    const dateEl = document.getElementById('current-date');
+    if (timeEl && dateEl) {
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+}
+
+function updateLastAttendanceInfo() {
+    const infoEl = document.getElementById('last-attendance-info');
+    if (attendanceData.length > 0) {
+        const last = attendanceData[0];
+        infoEl.innerHTML = `<span class="font-semibold text-slate-700">${last.status}</span> • ${last.lokasiKantor} • ${new Date(last.timestamp).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+    } else {
+        infoEl.textContent = 'Belum ada data hari ini.';
+    }
+}
+
+function checkAttendanceStatus() {
+    const today = new Date().toDateString();
+    const todayCheckIn = attendanceData.find(d => new Date(d.timestamp).toDateString() === today && d.status === 'Masuk');
+    const alertEl = document.getElementById('attendance-status-alert');
+    
+    if (!todayCheckIn) {
+        alertEl.classList.add('hidden');
+        return;
+    }
+    
+    const checkInTime = new Date(todayCheckIn.timestamp);
+    const [hours, minutes] = selectedOffice.batasJamMasuk.split(':').map(Number);
+    const deadline = new Date(checkInTime);
+    deadline.setHours(hours, minutes, 0, 0);
+    const diffMinutes = Math.round((checkInTime - deadline) / (1000 * 60));
+    
+    alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-500', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-500');
+    
+    if (diffMinutes > 0) {
+        alertEl.classList.add('bg-red-50', 'text-red-800', 'border-red-500');
+        alertEl.innerHTML = `
+            <i class="fas fa-exclamation-circle text-xl mr-3"></i>
+            <div>
+                <span class="font-bold">Terlambat!</span> 
+                <p class="text-sm">Anda absen masuk ${diffMinutes} menit lewat dari batas waktu.</p>
+            </div>`;
+    } else {
+        alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-500');
+        alertEl.innerHTML = `
+            <i class="fas fa-check-circle text-xl mr-3"></i>
+            <div>
+                <span class="font-bold">Tepat Waktu!</span> 
+                <p class="text-sm">Terima kasih telah hadir sebelum jam ${selectedOffice.batasJamMasuk}.</p>
+            </div>`;
+    }
+}
+
+// --- MAP & CHARTS ---
+function initMap() {
+    if (map) map.remove();
+    map = L.map('map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    
+    if (currentUser.role === 'Admin') {
+        const bounds = L.latLngBounds(officeLocations.map(o => [o.latitude, o.longitude]));
+        if(bounds.isValid()) map.fitBounds(bounds.pad(0.5));
+        officeLocations.forEach(office => addOfficeToMap(office));
+    } else {
+        map.setView([selectedOffice.latitude, selectedOffice.longitude], 16);
+        addOfficeToMap(selectedOffice);
+    }
+    refreshMap();
+}
+
+function addOfficeToMap(office) {
+    const icon = L.divIcon({ 
+        className: 'bg-transparent',
+        html: `<div class="w-8 h-8 bg-indigo-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center"><i class="fas fa-building text-white text-xs"></i></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+    });
+    
+    L.marker([office.latitude, office.longitude], { icon }).addTo(map).bindPopup(`<b>${office.nama}</b>`);
+    
+    L.circle([office.latitude, office.longitude], {
+        color: 'var(--primary-color)', 
+        fillColor: 'var(--primary-color)', 
+        fillOpacity: 0.1, 
+        radius: office.radius,
+        weight: 1,
+        dashArray: '5, 5'
+    }).addTo(map);
+}
+
+function refreshMap() {
+    map.eachLayer(layer => {
+        // Keep base tiles and office markers (which usually don't have user images)
+        if (layer instanceof L.Marker && layer.options.icon?.options?.html?.includes('fa-building')) return;
+        if (layer instanceof L.Marker) map.removeLayer(layer);
+    });
+    
+    attendanceData.forEach(data => {
+        if(!data.latitude || !data.longitude) return;
+        const popupContent = `
+            <div class="custom-popup p-0">
+                <div class="relative">
+                    <img src="${data.foto_url}" alt="selfie" class="w-full h-32 object-cover"/>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                        <p class="text-white text-xs font-bold">${data.nama}</p>
+                    </div>
+                </div>
+                <div class="p-2 text-xs">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-gray-500">Status</span>
+                        <span class="font-bold ${data.status === 'Masuk' ? 'text-green-600' : 'text-red-600'}">${data.status}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Jam</span>
+                        <span class="font-mono">${new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                    </div>
+                </div>
+            </div>`;
+            
+        const markerColor = data.status === 'Masuk' ? 'emerald' : 'rose';
+        const iconHtml = `<div class="w-8 h-8 bg-${markerColor}-500 rounded-full border-2 border-white shadow-md flex items-center justify-center"><i class="fas fa-user text-white text-xs"></i></div>`;
+        
+        L.marker([data.latitude, data.longitude], {
+             icon: L.divIcon({ className: 'bg-transparent', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] })
+        }).addTo(map).bindPopup(popupContent);
+    });
+}
+
+function initChart() {
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    const dailyData = attendanceData.filter(d => new Date(d.timestamp).toDateString() === today.toDateString());
+    const weeklyData = attendanceData.filter(d => new Date(d.timestamp) >= startOfWeek);
+    const monthlyData = attendanceData.filter(d => new Date(d.timestamp) >= startOfMonth);
+    
+    const uniqueUsersDaily = [...new Set(dailyData.map(item => item.email))].length;
+    const uniqueUsersWeekly = [...new Set(weeklyData.map(item => item.email))].length;
+    const uniqueUsersMonthly = [...new Set(monthlyData.map(item => item.email))].length;
+    
+    if (attendanceChart) attendanceChart.destroy();
+    
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.color = '#64748b';
+    
+    attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Hari Ini', 'Minggu Ini', 'Bulan Ini'],
+            datasets: [{
+                label: 'Karyawan Aktif',
+                data: [uniqueUsersDaily, uniqueUsersWeekly, uniqueUsersMonthly],
+                backgroundColor: ['#4f46e5', '#818cf8', '#c7d2fe'],
+                borderRadius: 8,
+                barThickness: 40
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: { 
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: '#f1f5f9' },
+                    ticks: { precision: 0 } 
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// --- DYNAMIC VIEW LOADERS (Styled) ---
+
+async function loadSettingsView() {
+    const view = document.getElementById('settings-view');
+    view.innerHTML = `<div class="modern-card p-8 flex items-center justify-center text-slate-500"><i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat pengaturan...</div>`;
+
+    const [settings, offices, jenisCuti, roles] = await Promise.all([
+        apiCall({ action: 'getSettings' }),
+        apiCall({ action: 'getOffices' }),
+        apiCall({ action: 'getJenisCuti' }),
+        apiCall({ action: 'getRoles' })
+    ]);
+    
+    appSettings = settings;
+    officeLocations = offices;
+    rolePermissions = roles;
+
+    // Use specific HTML structure for Settings
+    view.innerHTML = `
+        <form id="settings-form" class="max-w-4xl mx-auto space-y-8 pb-12">
+            <!-- General Settings -->
+            <div class="modern-card p-6 md:p-8">
+                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i class="fas fa-sliders-h mr-3 text-indigo-500"></i>Pengaturan Umum</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Aplikasi</label>
+                        <input type="text" name="appName" value="${settings.appName}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">URL Logo</label>
+                        <input type="url" name="logoUrl" value="${settings.logoUrl}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Warna Tema</label>
+                        <select name="themeColor" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="blue">Indigo (Default)</option>
+                            <option value="green">Emerald</option>
+                            <option value="red">Rose</option>
+                            <option value="white">Slate</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Settings -->
+             <div class="modern-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-user-shield mr-3 text-indigo-500"></i>Role & Izin</h2>
+                    <button type="button" id="add-role-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Role</button>
+                </div>
+                <div id="role-settings-container" class="space-y-4"></div>
+            </div>
+
+            <!-- Cuti Settings -->
+            <div class="modern-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Kategori Cuti</h2>
+                    <button type="button" id="add-jenis-cuti-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Kategori</button>
+                </div>
+                <div id="jenis-cuti-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- Office Settings -->
+            <div class="modern-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-map-marked mr-3 text-indigo-500"></i>Lokasi Kantor</h2>
+                    <button type="button" id="add-office-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Lokasi</button>
+                </div>
+                <div id="office-settings-container" class="space-y-6"></div>
+            </div>
+
+            <div class="sticky bottom-4">
+                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-slate-800 transition-colors transform hover:-translate-y-1">Simpan Semua Perubahan</button>
+            </div>
+        </form>
+    `;
+
+    document.querySelector('select[name="themeColor"]').value = settings.themeColor || 'blue';
+    renderOfficeSettings(offices);
+    renderJenisCutiSettings(jenisCuti);
+    renderRoleSettings(roles);
+
+    // Event listeners for dynamic buttons (Add Office, Add Cuti, Add Role)
+    document.getElementById('add-office-btn').addEventListener('click', () => {
+        const currentOfficeForms = [];
+         document.querySelectorAll('.office-form-group').forEach(group => {
+            currentOfficeForms.push({
+                nama: group.querySelector('[name="nama"]').value,
+                latitude: group.querySelector('[name="latitude"]').value,
+                longitude: group.querySelector('[name="longitude"]').value,
+                radius: group.querySelector('[name="radius"]').value,
+                batasJamMasuk: group.querySelector('[name="batasJamMasuk"]').value,
+                batasJamKeluar: group.querySelector('[name="batasJamKeluar"]').value,
+            });
+        });
+        const newOfficeData = { nama: 'Kantor Baru', latitude: 0, longitude: 0, radius: 100, batasJamMasuk: '09:00', batasJamKeluar: '17:00' };
+        renderOfficeSettings([...currentOfficeForms, newOfficeData]);
+    });
+    
+    document.getElementById('add-jenis-cuti-btn').addEventListener('click', () => {
+        const container = document.getElementById('jenis-cuti-container');
+        const newIndex = container.children.length;
+        container.insertAdjacentHTML('beforeend', createJenisCutiInputHTML('Jenis Baru', newIndex));
+        addDeleteListenerToJenisCuti();
+    });
+    
+    document.getElementById('add-role-btn').addEventListener('click', () => {
+        const container = document.getElementById('role-settings-container');
+        const newIndex = container.children.length;
+        const newRoleData = { roleName: 'Role Baru', canManageUsers: false, canSeeAttendanceData: false, canSeeEmployeeLocations: false, canManageSettings: false, canSeeSpoofLogs: false };
+        container.insertAdjacentHTML('beforeend', createRoleInputHTML(newRoleData, newIndex));
+        addDeleteListenerToRole();
+    });
+
+    document.getElementById('settings-form').addEventListener('submit', handleUpdateSettings);
+}
+
+// Render functions modified to match modern UI
+function renderOfficeSettings(offices) {
+    const container = document.getElementById('office-settings-container');
+    officeLocations = offices; 
+    container.innerHTML = offices.map((office, index) => `
+        <div class="office-form-group border border-slate-200 p-5 rounded-xl bg-slate-50 relative group transition-colors hover:border-indigo-300" data-id="${index}">
+            <button type="button" class="delete-office-btn absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Nama Lokasi</label>
+                    <input type="text" name="nama" value="${office.nama}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 font-semibold text-slate-800">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Latitude</label>
+                    <input type="number" step="any" name="latitude" value="${office.latitude}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Longitude</label>
+                    <input type="number" step="any" name="longitude" value="${office.longitude}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase">Radius (m)</label>
+                    <input type="number" name="radius" value="${office.radius}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase">Masuk</label>
+                        <input type="time" name="batasJamMasuk" value="${office.batasJamMasuk}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase">Keluar</label>
+                        <input type="time" name="batasJamKeluar" value="${office.batasJamKeluar}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add delete listeners
+    document.querySelectorAll('.delete-office-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.target.closest('.office-form-group').remove();
+        });
+    });
+}
+
+function createJenisCutiInputHTML(value, index) {
+    return `
+        <div class="jenis-cuti-item flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200" data-id="${index}">
+            <input type="text" name="jenisCuti" value="${value}" class="w-full bg-transparent border-none focus:ring-0 text-sm font-medium">
+            <button type="button" class="delete-jenis-cuti-btn text-slate-400 hover:text-red-500 p-1"><i class="fas fa-times"></i></button>
+        </div>`;
+}
+
+function renderJenisCutiSettings(jenisCutiList) {
+    const container = document.getElementById('jenis-cuti-container');
+    container.innerHTML = jenisCutiList.map(createJenisCutiInputHTML).join('');
+    addDeleteListenerToJenisCuti();
+}
+
+function addDeleteListenerToJenisCuti() {
+    document.querySelectorAll('.delete-jenis-cuti-btn').forEach(btn => {
+        btn.onclick = (e) => { e.target.closest('.jenis-cuti-item').remove(); };
+    });
+}
+
+function createRoleInputHTML(role, index) {
+    const permissions = [
+        { key: 'canManageUsers', label: 'Kelola User' },
+        { key: 'canSeeAttendanceData', label: 'Lihat Data' },
+        { key: 'canSeeEmployeeLocations', label: 'Peta Live' },
+        { key: 'canManageSettings', label: 'Pengaturan' },
+        { key: 'canSeeSpoofLogs', label: 'Log Keamanan' }
+    ];
+
+    const checkboxesHTML = permissions.map(p => `
+        <label class="flex items-center space-x-2 text-sm text-slate-600 bg-white p-2 rounded border border-slate-100">
+            <input type="checkbox" name="${p.key}" ${role[p.key] ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
+            <span>${p.label}</span>
+        </label>
+    `).join('');
+
+    return `
+        <div class="role-form-group border border-slate-200 p-4 rounded-xl bg-slate-50 relative" data-id="${index}">
+            <button type="button" class="delete-role-btn absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
+            <div class="space-y-3">
+                <input type="text" name="roleName" value="${role.roleName}" class="block w-full rounded-lg border-slate-300 focus:ring-indigo-500 font-bold text-slate-800" placeholder="Nama Role">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    ${checkboxesHTML}
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderRoleSettings(roles) {
+    const container = document.getElementById('role-settings-container');
+    container.innerHTML = roles.map(createRoleInputHTML).join('');
+    addDeleteListenerToRole();
+}
+
+function addDeleteListenerToRole() {
+    document.querySelectorAll('.delete-role-btn').forEach(btn => {
+        btn.onclick = (e) => { e.target.closest('.role-form-group').remove(); };
+    });
+}
+
+// ... (Other functions like loadAttendanceDataView, loadUsersView, etc. just need basic HTML wrapper updates)
+
+async function loadAttendanceDataView() {
+    const view = document.getElementById('attendance-data-view');
+    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...</div>`;
+    try {
+        const allAttendance = await apiCall({ action: 'getDashboardData', user: currentUser });
+        let filteredData = [...allAttendance].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const today = new Date().toISOString().split('T')[0];
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        
+        view.innerHTML = `
+            <div class="modern-card overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h2 class="text-xl font-bold text-slate-800">Laporan Absensi</h2>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <input type="date" id="start-date-filter" value="${firstDayOfMonth}" class="rounded-lg border-slate-200 text-sm">
+                        <span class="text-slate-400">-</span>
+                        <input type="date" id="end-date-filter" value="${today}" class="rounded-lg border-slate-200 text-sm">
+                        <button id="download-absensi-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                            <i class="fas fa-file-excel mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lokasi</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-report-body" class="bg-white divide-y divide-slate-100 text-sm text-slate-600"></tbody>
+                    </table>
+                </div>
+            </div>`;
+            
+        const renderTable = () => {
+            const startDate = new Date(document.getElementById('start-date-filter').value);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(document.getElementById('end-date-filter').value);
+            endDate.setHours(23, 59, 59, 999);
+            filteredData = allAttendance.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                return itemDate >= startDate && itemDate <= endDate;
+            }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            const tableBody = document.getElementById('attendance-report-body');
+            tableBody.innerHTML = filteredData.length === 0 ? '<tr><td colspan="4" class="text-center py-8 text-slate-400">Tidak ada data pada rentang tanggal ini.</td></tr>' :
+                filteredData.map(item => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap font-mono text-xs">${new Date(item.timestamp).toLocaleString('id-ID', { hour12: false })}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${item.nama}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.lokasiKantor}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'Masuk' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                ${item.status}
+                            </span>
+                        </td>
+                    </tr>`).join('');
+        };
+        
+        const downloadExcel = async () => {
+            if (filteredData.length === 0) return showNotification('warning', 'Data Kosong', 'Tidak ada data untuk diunduh.');
+            showLoader('Mengenerate Excel...');
+            try {
+                const result = await apiCall({ action: 'downloadLaporanAbsensi', data: { absensiData: filteredData } });
+                if (result.downloadUrl) {
+                    window.open(result.downloadUrl);
+                } else { throw new Error('Link download tidak tersedia.'); }
+            } catch (error) {
+                showNotification('error', 'Gagal', error.message);
+            } finally {
+                hideLoader();
+            }
+        };
+        
+        document.getElementById('start-date-filter').addEventListener('change', renderTable);
+        document.getElementById('end-date-filter').addEventListener('change', renderTable);
+        document.getElementById('download-absensi-excel-btn').addEventListener('click', downloadExcel);
+        renderTable();
+    } catch (error) {
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+    }
+}
+
+async function loadUsersView() {
+    const view = document.getElementById('users-view');
+    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat user...</div>`;
+    try {
+        const users = await apiCall({ action: 'getUsers' });
+        view.innerHTML = `
+            <div class="modern-card overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-800">Manajemen Karyawan</h2>
+                    <button id="add-user-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"><i class="fas fa-plus mr-2"></i>User Baru</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-body" class="bg-white divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>`;
+            
+        const userListBody = document.getElementById('user-list-body');
+        userListBody.innerHTML = users.map(user => `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900">${user.nama}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-slate-600">${user.email}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-semibold border border-slate-200">${user.role}</span></td>
+                <td class="px-6 py-4 whitespace-nowrap space-x-2">
+                    <button class="edit-user-btn text-indigo-600 hover:text-indigo-900 p-1" data-email='${user.email}' data-user='${JSON.stringify(user)}'><i class="fas fa-pen"></i></button>
+                    <button class="delete-user-btn text-rose-600 hover:text-rose-900 p-1" data-email="${user.email}"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+        
+        document.getElementById('add-user-btn').addEventListener('click', () => {
+            const form = document.getElementById('user-form');
+            form.reset();
+            document.getElementById('user-form-title').textContent = 'Tambah User Baru';
+            document.getElementById('original-email').value = '';
+            document.getElementById('user-email').disabled = false;
+            document.getElementById('user-password').required = true;
+            document.getElementById('user-form-modal').classList.remove('hidden');
+        });
+        document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', handleEditUserClick));
+        document.querySelectorAll('.delete-user-btn').forEach(btn => btn.addEventListener('click', handleDeleteUserClick));
+    } catch(error) {
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+    }
+}
+
+// ... Spoof Logs and Cuti View follow the same pattern of wrapping content in .modern-card
+async function loadSpoofLogView() {
+    const view = document.getElementById('spoof-log-view');
+    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat log...</div>`;
+    try {
+        const logs = await apiCall({ action: 'getSpoofLogs' });
+        let tableHTML = `
+            <div class="modern-card overflow-hidden">
+                <div class="p-6 border-b border-slate-100 bg-rose-50">
+                    <h2 class="text-xl font-bold text-rose-700"><i class="fas fa-shield-alt mr-2"></i>Log Keamanan (GPS Spoofing)</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Waktu</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Email User</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Koordinat</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Anomali</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-100 text-sm">`;
+        if (logs && logs.length > 0) {
+            logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(log => {
+                tableHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-xs">${new Date(log.timestamp).toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${log.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-mono">${log.latitude.toFixed(5)}, ${log.longitude.toFixed(5)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-rose-600 font-semibold bg-rose-50">${log.reason}</td>
+                    </tr>`;
+            });
+        } else {
+             tableHTML += `<tr><td colspan="4" class="text-center py-8 text-slate-400">Tidak ada aktivitas mencurigakan.</td></tr>`;
+        }
+        tableHTML += `</tbody></table></div></div>`;
+        view.innerHTML = tableHTML;
+    } catch(error) {
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+    }
+}
+
+async function loadEmployeeLocationsView() {
+    const view = document.getElementById('employee-locations-view');
+    view.innerHTML = `
+        <div class="modern-card p-0 overflow-hidden flex flex-col h-[70vh]">
+            <div class="p-4 bg-white border-b border-slate-100 z-10 shadow-sm">
+                <h2 class="text-lg font-bold text-slate-800"><i class="fas fa-map-marked-alt text-indigo-500 mr-2"></i>Peta Lokasi Karyawan (Live)</h2>
+            </div>
+            <div class="flex-1 w-full bg-slate-100 relative z-0" id="employee-map"></div>
+        </div>`;
+        
+    if (employeeMap) employeeMap.remove();
+    // Delay slightly to allow DOM to settle
+    setTimeout(async () => {
+        employeeMap = L.map('employee-map').setView([-2.548926, 118.0148634], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(employeeMap);
+
+        showLoader('Mengambil lokasi...');
+        try {
+            const locations = await apiCall({ action: 'getEmployeeLocations' });
+            if (locations.length === 0) {
+                showNotification('info', 'Info', 'Belum ada data lokasi karyawan hari ini.');
+            } else {
+                const bounds = L.latLngBounds(locations.map(o => [o.latitude, o.longitude]));
+                if(bounds.isValid()) employeeMap.fitBounds(bounds.pad(0.5));
+            }
+            locations.forEach(loc => {
+                const markerColor = loc.status === 'Masuk' ? 'emerald' : 'rose';
+                const htmlIcon = `<div class="w-8 h-8 bg-${markerColor}-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div>`;
+                
+                L.marker([loc.latitude, loc.longitude], {
+                     icon: L.divIcon({ className: 'bg-transparent', html: htmlIcon, iconSize: [32, 32] })
+                }).addTo(employeeMap).bindPopup(`
+                    <div class="p-2 text-center">
+                        <p class="font-bold text-slate-800">${loc.nama}</p>
+                        <p class="text-xs text-slate-500">${loc.status} di ${loc.lokasiKantor}</p>
+                        <p class="text-xs text-slate-400 font-mono mt-1">${new Date(loc.timestamp).toLocaleTimeString('id-ID')}</p>
+                    </div>
+                `);
+            });
+        } catch(error) {
+            console.error(error);
+        } finally {
+            hideLoader();
+        }
+    }, 100);
+}
+
+async function loadCutiView() {
+    const view = document.getElementById('cuti-view');
+    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat data cuti...</div>`;
+    const isManager = currentUser.role === 'Admin' || currentUser.role === 'HR';
+
+    view.innerHTML = `
+        <div class="space-y-6">
+            <!-- User's Cuti Card -->
+            <div class="modern-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">Pengajuan Saya</h2>
+                    <button id="create-cuti-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"><i class="fas fa-plus mr-2"></i>Ajukan Cuti</button>
+                </div>
+                <div id="status-cuti-container" class="overflow-x-auto"></div>
+            </div>
+            
+            <!-- Manager View -->
+            <div id="laporan-cuti-wrapper" class="${isManager ? '' : 'hidden'} modern-card p-6">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Approval & Laporan (HR/Admin)</h3>
+                
+                <div class="flex flex-wrap gap-4 items-center mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-slate-500">Periode:</span>
+                        <input type="date" id="cuti-start-date" class="rounded-lg border-slate-300 text-sm">
+                        <span class="text-slate-400">-</span>
+                        <input type="date" id="cuti-end-date" class="rounded-lg border-slate-300 text-sm">
+                    </div>
+                    <button id="download-cuti-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"><i class="fas fa-file-excel mr-2"></i>Excel</button>
+                </div>
+                <div id="laporan-cuti-container" class="overflow-x-auto"></div>
+            </div>
+        </div>`;
+    
+    // ... (Keep existing logic for button listeners)
+    document.getElementById('create-cuti-btn').addEventListener('click', async () => {
+        try {
+            showLoader('Menyiapkan form...');
+            const jenisCuti = await apiCall({ action: 'getJenisCuti' });
+            const jenisCutiSelect = document.getElementById('cuti-jenis');
+            if(jenisCuti.length > 0) {
+                jenisCutiSelect.innerHTML = jenisCuti.map(j => `<option value="${j}">${j}</option>`).join('');
+            } else {
+                 jenisCutiSelect.innerHTML = `<option value="">Tidak ada jenis cuti aktif</option>`;
+            }
+            document.getElementById('cuti-form').reset();
+            document.getElementById('cuti-form-modal').classList.remove('hidden');
+        } catch(e) {
+            showNotification('error', 'Gagal', 'Gagal memuat jenis cuti.');
+        } finally {
+            hideLoader();
+        }
+    });
+
+    try {
+        const daftarCuti = await apiCall({ action: 'getDaftarCuti', user: currentUser });
+        daftarCuti.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        const userCuti = daftarCuti.filter(c => c.email === currentUser.email);
+        document.getElementById('status-cuti-container').innerHTML = renderCutiTable(userCuti, false);
+        document.querySelectorAll('#status-cuti-container .view-cuti-doc-btn').forEach(btn => btn.addEventListener('click', handleViewCutiDocClick));
+
+        if (isManager) {
+            let filteredData = [...daftarCuti];
+            const renderLaporan = () => {
+                document.getElementById('laporan-cuti-container').innerHTML = renderCutiTable(filteredData, true);
+                document.querySelectorAll('#laporan-cuti-container .update-cuti-status-btn').forEach(btn => btn.addEventListener('click', handleUpdateCutiStatusClick));
+                document.querySelectorAll('#laporan-cuti-container .view-cuti-doc-btn').forEach(btn => btn.addEventListener('click', handleViewCutiDocClick));
+            };
+            const filterLaporan = () => {
+                const startDate = document.getElementById('cuti-start-date').value;
+                const endDate = document.getElementById('cuti-end-date').value;
+                filteredData = daftarCuti.filter(c => {
+                    let valid = true;
+                    if (startDate && new Date(c.tanggalMulai) < new Date(startDate)) valid = false;
+                    if (endDate && new Date(c.tanggalSelesai) > new Date(endDate)) valid = false;
+                    return valid;
+                });
+                renderLaporan();
+            };
+            document.getElementById('cuti-start-date').addEventListener('change', filterLaporan);
+            document.getElementById('cuti-end-date').addEventListener('change', filterLaporan);
+            document.getElementById('download-cuti-excel-btn').addEventListener('click', async () => {
+                if (filteredData.length === 0) return showNotification('warning', 'Info', 'Tidak ada data.');
+                showLoader('Exporting...');
+                try {
+                    const result = await apiCall({ action: 'downloadLaporanCuti', data: { cutiData: filteredData } });
+                    if (result.downloadUrl) window.open(result.downloadUrl);
+                } catch (error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+            });
+            renderLaporan();
+        }
+    } catch(error) {
+        // Handle error
+    }
+}
+
+function renderCutiTable(data, isManagerView) {
+    if (!data || data.length === 0) return '<div class="text-center py-6 text-slate-400 bg-slate-50 rounded-lg">Belum ada pengajuan cuti.</div>';
+    
+    const statusColor = {
+        'Pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+        'Disetujui': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'Ditolak': 'bg-rose-100 text-rose-700 border-rose-200',
+    };
+    
+    let table = `<table class="min-w-full divide-y divide-slate-100"><thead class="bg-slate-50"><tr>`;
+    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Karyawan</th>`;
+    table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Periode</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Jenis</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Aksi</th>
+              </tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
+              
+    data.forEach(c => {
+        table += `<tr class="hover:bg-slate-50 transition-colors">`;
+        if (isManagerView) table += `<td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${c.nama}</td>`;
+        table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600">${new Date(c.tanggalMulai).toLocaleDateString('id-ID')} <span class="text-slate-300 mx-1">→</span> ${new Date(c.tanggalSelesai).toLocaleDateString('id-ID')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-700">${c.jenisCuti}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">
+                        <button data-id="${c.id}" class="view-cuti-doc-btn text-slate-400 hover:text-indigo-600 mr-3 transition-colors" title="Lihat Dokumen PDF"><i class="fas fa-file-pdf fa-lg"></i></button>`;
+        if (isManagerView && c.status === 'Pending') {
+            table += `<button data-id="${c.id}" data-nama="${c.nama}" data-status="Disetujui" class="update-cuti-status-btn text-emerald-500 hover:text-emerald-700 mr-2 bg-emerald-50 p-1.5 rounded-lg transition-colors" title="Setujui"><i class="fas fa-check"></i></button>
+                      <button data-id="${c.id}" data-nama="${c.nama}" data-status="Ditolak" class="update-cuti-status-btn text-rose-500 hover:text-rose-700 bg-rose-50 p-1.5 rounded-lg transition-colors" title="Tolak"><i class="fas fa-times"></i></button>`;
+        }
+        table += `</td></tr>`;
+    });
+    table += `</tbody></table>`;
+    return table;
+}
+
+// --- FORM HANDLERS & HELPERS ---
+async function handleUpdateSettings(e) {
+    e.preventDefault();
+    showLoader('Menyimpan Pengaturan...');
+    const form = e.target;
+    // ... (Data collection logic matches original exactly)
+    const generalSettingsData = { appName: form.appName.value, logoUrl: form.logoUrl.value, themeColor: form.themeColor.value };
+    const officesData = [];
+    document.querySelectorAll('.office-form-group').forEach(group => {
+        officesData.push({
+            nama: group.querySelector('[name="nama"]').value,
+            latitude: group.querySelector('[name="latitude"]').value,
+            longitude: group.querySelector('[name="longitude"]').value,
+            radius: group.querySelector('[name="radius"]').value,
+            batasJamMasuk: group.querySelector('[name="batasJamMasuk"]').value,
+            batasJamKeluar: group.querySelector('[name="batasJamKeluar"]').value,
+        });
+    });
+    const jenisCutiData = Array.from(document.querySelectorAll('[name="jenisCuti"]')).map(input => input.value.trim()).filter(Boolean);
+    const rolesData = [];
+    document.querySelectorAll('.role-form-group').forEach(group => {
+        rolesData.push({
+            roleName: group.querySelector('[name="roleName"]').value,
+            canManageUsers: group.querySelector('[name="canManageUsers"]').checked,
+            canSeeAttendanceData: group.querySelector('[name="canSeeAttendanceData"]').checked,
+            canSeeEmployeeLocations: group.querySelector('[name="canSeeEmployeeLocations"]').checked,
+            canManageSettings: group.querySelector('[name="canManageSettings"]').checked,
+            canSeeSpoofLogs: group.querySelector('[name="canSeeSpoofLogs"]').checked,
+        });
+    });
+
+    try {
+        await Promise.all([
+            apiCall({ action: 'updateSettings', data: generalSettingsData }),
+            apiCall({ action: 'updateOffices', data: officesData }),
+            apiCall({ action: 'updateJenisCuti', data: jenisCutiData }),
+            apiCall({ action: 'updateRoles', data: rolesData })
+        ]);
+        appSettings = { ...appSettings, ...generalSettingsData };
+        officeLocations = officesData;
+        updateUIWithSettings();
+        showNotification('success', 'Tersimpan', 'Pengaturan berhasil diperbarui. Halaman akan dimuat ulang.');
+        setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+        showNotification('error', 'Gagal', error.message);
+    } finally {
+        hideLoader();
+    }
+}
+
+function handleEditUserClick(e) {
+    const user = JSON.parse(e.currentTarget.dataset.user);
+    const form = document.getElementById('user-form');
+    form.reset();
+    document.getElementById('user-form-title').textContent = 'Edit Data User';
+    document.getElementById('original-email').value = user.email;
+    document.getElementById('user-nama').value = user.nama;
+    document.getElementById('user-email').value = user.email;
+    document.getElementById('user-email').disabled = true;
+    document.getElementById('user-role').value = user.role;
+    document.getElementById('user-password').required = false;
+    document.getElementById('user-form-modal').classList.remove('hidden');
+}
+
+function handleDeleteUserClick(e) {
+    const email = e.currentTarget.dataset.email;
+    showConfirmation('Hapus User', `Yakin ingin menghapus akses untuk ${email}?`, async () => {
+        hideNotification();
+        showLoader('Menghapus...');
+        try {
+            await apiCall({ action: 'deleteUser', email });
+            showNotification('success', 'Terhapus', 'User berhasil dihapus.');
+            loadUsersView();
+        } catch (error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+    });
+}
+
+async function handleUserFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const isEditing = !!form.originalEmail.value;
+    const data = {
+        nama: form.nama.value,
+        email: isEditing ? form.originalEmail.value : form.email.value,
+        password: form.password.value,
+        role: form.role.value,
+        originalEmail: form.originalEmail.value
+    };
+    showLoader('Menyimpan User...');
+    try {
+        await apiCall({ action: isEditing ? 'editUser' : 'addUser', data });
+        showNotification('success', 'Berhasil', 'Data user telah disimpan.');
+        document.getElementById('user-form-modal').classList.add('hidden');
+        loadUsersView();
+    } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+}
+
+async function handleCutiFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        user: currentUser,
+        jenisCuti: form.jenisCuti.value,
+        tanggalMulai: form.tanggalMulai.value,
+        tanggalSelesai: form.tanggalSelesai.value,
+        keterangan: form.keterangan.value,
+    };
+    if (new Date(data.tanggalSelesai) < new Date(data.tanggalMulai)) {
+        showNotification('error', 'Tanggal Invalid', 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.');
+        return;
+    }
+    showLoader('Mengirim Pengajuan...');
+    try {
+        await apiCall({ action: 'ajukanCuti', data });
+        showNotification('success', 'Terkirim', 'Pengajuan cuti Anda sedang diproses.');
+        document.getElementById('cuti-form-modal').classList.add('hidden');
+        loadCutiView();
+    } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+}
+
+async function handleUpdateCutiStatusClick(e) {
+    const button = e.currentTarget; 
+    const cutiId = button.dataset.id;
+    const newStatus = button.dataset.status;
+    const userNama = button.dataset.nama;
+    showConfirmation(`Konfirmasi ${newStatus}`, `Ubah status cuti ${userNama} menjadi ${newStatus}?`, async () => {
+        hideNotification();
+        showLoader('Updating...');
+        try {
+            await apiCall({ action: 'updateStatusCuti', cutiId, newStatus, approverName: currentUser.nama });
+            showNotification('success', 'Berhasil', 'Status cuti diperbarui.');
+            loadCutiView();
+        } catch (error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+    });
+}
+
+async function handleViewCutiDocClick(e) {
+    const cutiId = e.currentTarget.dataset.id;
+    showLoader('Membuat PDF...');
+    try {
+        const result = await apiCall({ action: 'downloadDokumenCuti', data: { cutiId, settings: appSettings } });
+        if (result.base64) openPdfFromBase64(result.base64, result.filename);
+        else throw new Error('File rusak atau tidak ditemukan.');
+    } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+}
+
+// --- UTILITY FUNCTIONS ---
+function showLoader(text = 'Loading...') {
+    const txt = document.getElementById('loader-text');
+    if(txt) txt.textContent = text;
+    const modal = document.getElementById('loader-modal');
+    if(modal) modal.classList.remove('hidden');
+}
+
+function hideLoader() {
+    const modal = document.getElementById('loader-modal');
+    if(modal) modal.classList.add('hidden');
+}
+
+function showNotification(type, title, message, onConfirm = null) {
+    const modal = document.getElementById('notification-modal');
+    const iconEl = document.getElementById('notification-icon');
+    const buttonsContainer = document.getElementById('notification-buttons');
+    
+    document.getElementById('notification-title').textContent = title;
+    document.getElementById('notification-message').textContent = message;
+    
+    // Modern styling for icon
+    const typeMap = {
+        success: { class: 'bg-emerald-100 text-emerald-600', icon: 'fa-check' },
+        error: { class: 'bg-rose-100 text-rose-600', icon: 'fa-times' },
+        warning: { class: 'bg-amber-100 text-amber-600', icon: 'fa-exclamation' }
+    };
+    const style = typeMap[type] || { class: 'bg-indigo-100 text-indigo-600', icon: 'fa-info' };
+    
+    iconEl.className = `mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 text-3xl ${style.class}`;
+    iconEl.innerHTML = `<i class="fas ${style.icon}"></i>`;
+    
+    if (typeof onConfirm === 'function') {
+        buttonsContainer.innerHTML = `
+            <div class="flex gap-3">
+                <button id="confirm-cancel" class="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium">Batal</button>
+                <button id="confirm-ok" class="flex-1 rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 font-medium shadow-lg shadow-indigo-500/30">Ya</button>
+            </div>
+        `;
+        document.getElementById('confirm-ok').onclick = onConfirm;
+        document.getElementById('confirm-cancel').onclick = hideNotification;
+    } else {
+        buttonsContainer.innerHTML = `<button id="notification-close-btn" class="w-full rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 font-medium shadow-md">Tutup</button>`;
+        document.getElementById('notification-close-btn').onclick = hideNotification;
+    }
+    modal.classList.remove('hidden');
+}
+
+function showConfirmation(title, message, onConfirm) {
+    showNotification('warning', title, message, onConfirm);
+}
+
+function hideNotification() {
+    document.getElementById('notification-modal').classList.add('hidden');
+}
+
+function applyTheme(theme) {
+    // We handle theme primarily through CSS variables in <style> tag
+    // This updates the JS variables if needed for charts
+    const colors = {
+        blue: '#4f46e5',
+        green: '#10b981',
+        red: '#f43f5e',
+        white: '#64748b'
+    };
+    document.documentElement.style.setProperty('--primary-color', colors[theme] || colors.blue);
+}
+
+function openPdfFromBase64(base64, filename) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type: 'application/pdf'});
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL, '_blank');
+}
+</script>
+</body>
+</html>
