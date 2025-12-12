@@ -8,11 +8,11 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans (Modern Font) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Phosphor Icons (Modern & Elegant Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <!-- Leaflet JS & CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -33,6 +33,18 @@
                         primary: 'var(--primary-color)',
                         'primary-hover': 'var(--primary-hover-color)',
                         surface: '#f8fafc',
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
                     }
                 }
             }
@@ -48,7 +60,7 @@
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
         }
         
         /* Modern Scrollbar */
@@ -58,15 +70,27 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* Sidebar Styling */
-        .sidebar-item { transition: all 0.2s ease; border-right: 3px solid transparent; color: #94a3b8; }
-        .sidebar-item:hover { background-color: rgba(255,255,255, 0.05); color: white; }
+        .sidebar-item { 
+            transition: all 0.2s ease; 
+            border-right: 3px solid transparent; 
+            color: #94a3b8; 
+            margin-bottom: 4px;
+        }
+        .sidebar-item:hover { 
+            background-color: rgba(255,255,255, 0.05); 
+            color: white; 
+            padding-left: 1.25rem; /* Slight slide effect */
+        }
         .sidebar-item.active { 
-            background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.15) 0%, transparent 100%);
             border-right-color: var(--primary-color); 
             color: #ffffff; 
             font-weight: 600; 
         }
-        .sidebar-item.active i { color: var(--primary-color); }
+        .sidebar-item.active i { 
+            color: var(--primary-color); 
+            weight: fill; /* Phosphor weight handling handled by class, but just in case */
+        }
 
         /* Buttons */
         .btn-primary { 
@@ -76,7 +100,7 @@
         .btn-primary:hover { 
             background-color: var(--primary-hover-color); 
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
         }
 
         /* Glassmorphism & Cards */
@@ -87,13 +111,14 @@
         }
         .modern-card {
             background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem; /* More rounded */
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.03), 0 2px 8px -2px rgba(0, 0, 0, 0.02);
+            border: 1px solid #f1f5f9;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .modern-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.05);
+            border-color: #e2e8f0;
         }
 
         /* Map Popup */
@@ -103,21 +128,21 @@
             border-radius: 12px; 
             padding: 0;
             overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+            border: none;
         }
         .custom-popup .leaflet-popup-content { margin: 0; }
+        .custom-popup .leaflet-popup-tip { background: white; }
         
         /* Animations */
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
+            from { opacity: 0; transform: translateY(15px); filter: blur(2px); } 
+            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
         }
         
-        /* Loader */
-        .loader-dots div {
-            animation-timing-function: cubic-bezier(0, 1, 1, 0);
-        }
+        /* Custom Loader */
+        .loader-dots div { animation-timing-function: cubic-bezier(0, 1, 1, 0); }
         .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
         .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
         .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
@@ -128,60 +153,72 @@
 
     </style>
 </head>
-<body class="text-slate-600 bg-slate-50 h-screen overflow-hidden">
+<body class="text-slate-600 bg-slate-50 h-screen overflow-hidden selection:bg-indigo-100 selection:text-indigo-700">
 
     <!-- ===== LOGIN PAGE (Redesigned) ===== -->
-    <div id="login-page" class="flex min-h-screen w-full">
+    <div id="login-page" class="flex min-h-screen w-full relative">
+        <!-- Background Elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+            <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/30 rounded-full blur-[100px] animate-blob"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-200/30 rounded-full blur-[100px] animate-blob animation-delay-2000"></div>
+        </div>
+
         <!-- Left Side: Login Form -->
-        <div class="w-full lg:w-1/2 flex items-center justify-center bg-white p-8 lg:p-12 z-10">
+        <div class="w-full lg:w-1/2 flex items-center justify-center bg-white/80 backdrop-blur-sm p-8 lg:p-12 z-10">
             <div class="w-full max-w-md space-y-8 fade-in">
                 <div class="text-center">
-                    <img id="login-logo" src="https://iili.io/KEWlfNp.png" alt="Logo" class="h-16 mx-auto mb-6 object-contain" onerror="this.src='https://placehold.co/150x50/3498db/ffffff?text=Logo'">
-                    <h1 id="login-app-name" class="text-3xl font-bold text-slate-900 tracking-tight">Selamat Datang</h1>
-                    <p class="text-slate-500 mt-2">Masuk untuk mengelola kehadiran Anda</p>
+                    <!-- New SVG Logo Construction -->
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-xl shadow-indigo-500/20">
+                            <i class="ph-fill ph-fingerprint text-4xl"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 id="login-app-name" class="text-3xl font-extrabold text-slate-900 tracking-tight">Selamat Datang</h1>
+                    <p class="text-slate-500 mt-2 text-lg">Aplikasi Absensi Modern</p>
                 </div>
 
-                <form id="login-form" class="mt-8 space-y-6">
+                <form id="login-form" class="mt-10 space-y-6">
                     <div class="space-y-5">
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Perusahaan</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-envelope"></i>
+                        <div class="group">
+                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-1 ml-1">Email Perusahaan</label>
+                            <div class="relative transition-all duration-300 transform group-focus-within:scale-[1.01]">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                    <i class="ph ph-envelope-simple text-xl"></i>
                                 </div>
-                                <input type="email" id="email" name="email" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors" placeholder="nama@perusahaan.com">
+                                <input type="email" id="email" name="email" required class="pl-12 w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 transition-all shadow-sm outline-none" placeholder="nama@perusahaan.com">
                             </div>
                         </div>
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-lock"></i>
+                        <div class="group">
+                            <label for="password" class="block text-sm font-semibold text-slate-700 mb-1 ml-1">Password</label>
+                            <div class="relative transition-all duration-300 transform group-focus-within:scale-[1.01]">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                    <i class="ph ph-lock-key text-xl"></i>
                                 </div>
-                                <input type="password" id="password" name="password" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors" placeholder="••••••••">
+                                <input type="password" id="password" name="password" required class="pl-12 w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 transition-all shadow-sm outline-none" placeholder="••••••••">
                             </div>
                         </div>
-                        <div>
-                            <label for="office-location" class="block text-sm font-medium text-slate-700 mb-1">Lokasi Kantor</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-building"></i>
+                        <div class="group">
+                            <label for="office-location" class="block text-sm font-semibold text-slate-700 mb-1 ml-1">Lokasi Kantor</label>
+                            <div class="relative transition-all duration-300 transform group-focus-within:scale-[1.01]">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                                    <i class="ph ph-buildings text-xl"></i>
                                 </div>
-                                <select id="office-location" name="officeLocation" required class="pl-10 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-colors appearance-none">
+                                <select id="office-location" name="officeLocation" required class="pl-12 w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 transition-all shadow-sm outline-none appearance-none cursor-pointer">
                                     <option value="">Memuat lokasi...</option>
                                 </select>
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fas fa-chevron-down text-xs"></i>
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                                    <i class="ph ph-caret-down text-lg"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-500/30">
-                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <i class="fas fa-sign-in-alt group-hover:text-indigo-200 transition-colors"></i>
+                    <button type="submit" class="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-500/30 overflow-hidden">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+                            <i class="ph-bold ph-sign-in text-xl group-hover:translate-x-1 transition-transform"></i>
                         </span>
-                        Masuk ke Dashboard
+                        Masuk Dashboard
                     </button>
                 </form>
             </div>
@@ -191,13 +228,13 @@
         <div class="hidden lg:flex w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center">
             <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-slate-900 opacity-90"></div>
             <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; mix-blend-mode: overlay;"></div>
-            <div class="relative z-10 text-center px-12">
-                <h2 class="text-4xl font-bold text-white mb-6">Efisiensi dalam Genggaman</h2>
-                <p class="text-indigo-100 text-lg leading-relaxed">Sistem absensi terintegrasi dengan geolokasi presisi dan pelaporan *real-time* untuk produktivitas tim yang lebih baik.</p>
+            <div class="relative z-10 text-center px-12 max-w-2xl">
+                <div class="mb-8 inline-block p-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                    <i class="ph-duotone ph-map-pin-line text-5xl text-indigo-300"></i>
+                </div>
+                <h2 class="text-4xl font-extrabold text-white mb-6 tracking-tight">Presensi Tanpa Batas</h2>
+                <p class="text-indigo-100 text-lg leading-relaxed font-light">Sistem manajemen kehadiran cerdas dengan geolokasi presisi tinggi, analitik real-time, dan antarmuka yang memanjakan mata.</p>
             </div>
-            <!-- Decorative Circles -->
-            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         </div>
     </div>
 
@@ -210,46 +247,52 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
             <!-- Sidebar Header -->
-            <div class="h-20 flex items-center px-8 border-b border-slate-800 bg-slate-900">
-                <img id="dashboard-logo" src="https://iili.io/KEWlfNp.png" alt="Logo" class="h-8 object-contain brightness-0 invert" onerror="this.src='https://placehold.co/150x50/3498db/ffffff?text=Logo'">
+            <div class="h-24 flex items-center px-8 border-b border-slate-800/50 bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-500 text-white p-1.5 rounded-lg">
+                        <i class="ph-bold ph-fingerprint text-xl"></i>
+                    </div>
+                    <span class="font-bold text-white text-lg tracking-tight">Absensi<span class="text-indigo-400">App</span></span>
+                </div>
             </div>
             
             <!-- Sidebar Nav -->
             <nav class="flex-1 overflow-y-auto py-6 space-y-1 px-3 custom-scrollbar">
-                <div class="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu Utama</div>
+                <div class="px-4 mb-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Menu Utama</div>
+                
                 <a href="#home" class="sidebar-item active flex items-center px-4 py-3.5 rounded-xl group" data-view="home-view">
-                    <i class="fas fa-home w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                    <i class="ph ph-squares-four text-xl mr-3 group-hover:text-white transition-colors"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
                 <a href="#cuti" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="cuti-view">
-                    <i class="fas fa-calendar-check w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                    <i class="ph ph-calendar-check text-xl mr-3 group-hover:text-white transition-colors"></i>
                     <span class="font-medium">Pengajuan Cuti</span>
                 </a>
 
                 <div id="user-menu">
-                    <div class="mt-8 px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Karyawan</div>
+                    <div class="mt-8 px-4 mb-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Karyawan</div>
                     <a href="#users" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="users-view" data-permission="canManageUsers">
-                        <i class="fas fa-users w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <i class="ph ph-users text-xl mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">Manajemen User</span>
                     </a>
                     <a href="#attendance-data" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="attendance-data-view" data-permission="canSeeAttendanceData">
-                        <i class="fas fa-clipboard-list w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <i class="ph ph-clipboard-text text-xl mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">Data Absensi</span>
                     </a>
                     <a href="#employee-locations" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="employee-locations-view" data-permission="canSeeEmployeeLocations">
-                        <i class="fas fa-map-marked-alt w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <i class="ph ph-map-trifold text-xl mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">Lokasi Live</span>
                     </a>
                 </div>
 
                 <div id="admin-menu">
-                    <div class="mt-8 px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Administrator</div>
+                    <div class="mt-8 px-4 mb-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Administrator</div>
                     <a href="#settings" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="settings-view" data-permission="canManageSettings">
-                        <i class="fas fa-cog w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <i class="ph ph-gear text-xl mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">Pengaturan</span>
                     </a>
                     <a href="#spoof-logs" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="spoof-log-view" data-permission="canSeeSpoofLogs">
-                        <i class="fas fa-shield-alt w-8 text-center text-lg group-hover:scale-110 transition-transform"></i>
+                        <i class="ph ph-shield-check text-xl mr-3 group-hover:text-white transition-colors"></i>
                         <span class="font-medium">Keamanan GPS</span>
                     </a>
                 </div>
@@ -257,8 +300,8 @@
 
             <!-- Sidebar Footer -->
             <div class="p-4 border-t border-slate-800 bg-slate-900/50">
-                <button id="logout-btn" class="flex items-center w-full px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-xl transition-colors">
-                    <i class="fas fa-sign-out-alt w-8 text-center"></i>
+                <button id="logout-btn" class="flex items-center w-full px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all group">
+                    <i class="ph ph-sign-out text-xl mr-3 group-hover:translate-x-1 transition-transform"></i>
                     <span class="font-medium">Keluar</span>
                 </button>
             </div>
@@ -269,28 +312,28 @@
             <!-- Top Header -->
             <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-30">
                 <div class="flex items-center gap-4">
-                    <button id="menu-btn" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 focus:outline-none md:hidden rounded-lg hover:bg-slate-100">
-                        <i class="fas fa-bars text-xl"></i>
+                    <button id="menu-btn" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 focus:outline-none md:hidden rounded-lg hover:bg-slate-100 transition-colors">
+                        <i class="ph ph-list text-2xl"></i>
                     </button>
                     <div>
                         <h1 class="text-xl font-bold text-slate-800" id="dashboard-app-name">Dashboard</h1>
-                        <p class="text-xs text-slate-500 hidden sm:block">Overview performa absensi hari ini</p>
+                        <p class="text-xs text-slate-500 hidden sm:block font-medium">Overview performa hari ini</p>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-6">
                     <div class="text-right hidden sm:block">
                         <p id="current-time" class="text-lg font-bold text-slate-800 font-mono tracking-tight leading-none"></p>
-                        <p id="current-date" class="text-xs text-slate-500 font-medium uppercase tracking-wide mt-1"></p>
+                        <p id="current-date" class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1"></p>
                     </div>
                     <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
-                    <div class="flex items-center gap-3 pl-2">
-                        <div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-sm">
-                            <i class="fas fa-user"></i>
+                    <div class="flex items-center gap-3 pl-2 group cursor-pointer">
+                        <div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            <i class="ph-fill ph-user"></i>
                         </div>
                         <div class="hidden sm:block">
-                            <p class="text-sm font-bold text-slate-800 leading-tight" id="user-name-display">User</p>
-                            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 mt-1 inline-block" id="user-role-display">Role</span>
+                            <p class="text-sm font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors" id="user-name-display">User</p>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 mt-1 inline-block" id="user-role-display">Role</span>
                         </div>
                     </div>
                 </div>
@@ -302,93 +345,103 @@
                 <!-- Home View -->
                 <div id="home-view" class="content-view fade-in max-w-7xl mx-auto space-y-6">
                     <!-- Status Alert -->
-                    <div id="attendance-status-alert" class="hidden rounded-xl shadow-sm border-l-4 p-4 flex items-start" role="alert"></div>
+                    <div id="attendance-status-alert" class="hidden rounded-2xl shadow-sm border p-4 flex items-start gap-4" role="alert"></div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Left Column: Action Card -->
                         <div class="lg:col-span-2 space-y-6">
                             <!-- Attendance Action Card -->
-                            <div class="modern-card p-6 md:p-8 bg-gradient-to-r from-white to-slate-50">
-                                <div class="flex justify-between items-start mb-6">
+                            <div class="modern-card p-6 md:p-8 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 p-8 opacity-5">
+                                    <i class="ph-fill ph-watch text-9xl"></i>
+                                </div>
+                                
+                                <div class="flex flex-col sm:flex-row justify-between items-start mb-8 relative z-10">
                                     <div>
-                                        <h2 class="text-xl font-bold text-slate-800">Presensi Harian</h2>
-                                        <p class="text-slate-500 text-sm mt-1"><i class="fas fa-map-marker-alt mr-1 text-indigo-500"></i> Lokasi: <span id="current-office-location" class="font-semibold text-slate-700">Memuat...</span></p>
+                                        <h2 class="text-2xl font-bold text-slate-800">Presensi Harian</h2>
+                                        <p class="text-slate-500 text-sm mt-2 flex items-center font-medium">
+                                            <i class="ph-fill ph-map-pin mr-1.5 text-indigo-500 text-lg"></i> 
+                                            Lokasi: <span id="current-office-location" class="text-slate-700 ml-1">Memuat...</span>
+                                        </p>
                                     </div>
-                                    <div id="location-status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
-                                        Mendeteksi GPS...
+                                    <div id="location-status-badge" class="mt-4 sm:mt-0 px-4 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-2">
+                                        <i class="ph ph-spinner animate-spin"></i> Mendeteksi GPS...
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                    <button id="check-in-btn" class="group relative overflow-hidden bg-emerald-500 hover:bg-emerald-600 text-white p-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left">
-                                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
-                                            <i class="fas fa-sign-in-alt text-8xl"></i>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8 relative z-10">
+                                    <button id="check-in-btn" class="group relative overflow-hidden bg-emerald-500 hover:bg-emerald-600 text-white p-6 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left ring-4 ring-transparent hover:ring-emerald-500/30">
+                                        <div class="absolute right-[-10px] top-[-10px] opacity-20 transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                                            <i class="ph-fill ph-fingerprint text-[8rem]"></i>
                                         </div>
                                         <div class="relative z-10">
-                                            <div class="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
-                                                <i class="fas fa-fingerprint text-2xl"></i>
+                                            <div class="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-inner">
+                                                <i class="ph-bold ph-fingerprint-simple text-3xl"></i>
                                             </div>
-                                            <h3 class="text-xl font-bold">Absen Masuk</h3>
-                                            <p class="text-emerald-100 text-sm mt-1">Mulai jam kerja Anda</p>
+                                            <h3 class="text-2xl font-bold tracking-tight">Absen Masuk</h3>
+                                            <p class="text-emerald-100 text-sm mt-1 font-medium">Mulai jam kerja Anda</p>
                                         </div>
                                     </button>
 
-                                    <button id="check-out-btn" class="group relative overflow-hidden bg-rose-500 hover:bg-rose-600 text-white p-6 rounded-2xl shadow-lg shadow-rose-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left">
-                                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
-                                            <i class="fas fa-sign-out-alt text-8xl"></i>
+                                    <button id="check-out-btn" class="group relative overflow-hidden bg-rose-500 hover:bg-rose-600 text-white p-6 rounded-2xl shadow-xl shadow-rose-500/20 transition-all duration-300 transform hover:-translate-y-1 text-left ring-4 ring-transparent hover:ring-rose-500/30">
+                                        <div class="absolute right-[-10px] top-[-10px] opacity-20 transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                                            <i class="ph-fill ph-sign-out text-[8rem]"></i>
                                         </div>
                                         <div class="relative z-10">
-                                            <div class="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
-                                                <i class="fas fa-running text-2xl"></i>
+                                            <div class="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm shadow-inner">
+                                                <i class="ph-bold ph-person-simple-run text-3xl"></i>
                                             </div>
-                                            <h3 class="text-xl font-bold">Absen Keluar</h3>
-                                            <p class="text-rose-100 text-sm mt-1">Selesaikan hari ini</p>
+                                            <h3 class="text-2xl font-bold tracking-tight">Absen Keluar</h3>
+                                            <p class="text-rose-100 text-sm mt-1 font-medium">Selesaikan hari ini</p>
                                         </div>
                                     </button>
                                 </div>
                                 
-                                <div class="border-t border-slate-100 pt-4 flex items-center text-sm text-slate-500">
-                                    <i class="fas fa-history mr-2 text-slate-400"></i>
+                                <div class="border-t border-slate-100 pt-5 flex items-center text-sm text-slate-500 font-medium">
+                                    <i class="ph ph-clock-counter-clockwise mr-2 text-slate-400 text-lg"></i>
                                     <span id="last-attendance-info">Memuat riwayat...</span>
                                 </div>
                             </div>
 
                             <!-- Map Section -->
-                            <div class="modern-card p-1 overflow-hidden">
-                                <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                    <h3 class="font-bold text-slate-800">Peta Lokasi</h3>
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <span class="text-xs text-slate-500">Live</span>
+                            <div class="modern-card p-1.5 overflow-hidden">
+                                <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center rounded-t-xl">
+                                    <h3 class="font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-map-trifold mr-2 text-indigo-500"></i>Peta Lokasi</h3>
+                                    <div class="flex items-center space-x-2 bg-green-50 px-2 py-1 rounded-md border border-green-100">
+                                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        <span class="text-xs text-green-700 font-bold">Live</span>
                                     </div>
                                 </div>
-                                <div class="h-80 w-full bg-slate-100 rounded-b-xl z-0 relative" id="map"></div>
+                                <div class="h-80 w-full bg-slate-100 rounded-b-lg z-0 relative" id="map"></div>
                             </div>
                         </div>
 
                         <!-- Right Column: Stats & Info -->
                         <div class="space-y-6">
                             <!-- GPS Status Card -->
-                            <div class="modern-card p-6">
-                                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Status GPS</h3>
-                                <div class="flex items-center justify-center py-4">
-                                    <div class="relative">
-                                        <div class="w-32 h-32 rounded-full border-4 border-slate-100 flex items-center justify-center">
-                                            <i class="fas fa-satellite-dish text-4xl text-slate-300"></i>
+                            <div class="modern-card p-6 text-center">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Kualitas Sinyal</h3>
+                                <div class="flex items-center justify-center py-2 relative">
+                                    <div class="relative z-10">
+                                        <div class="w-28 h-28 rounded-full bg-slate-50 border-4 border-white shadow-inner flex items-center justify-center text-slate-300">
+                                            <i class="ph-duotone ph-broadcast text-5xl"></i>
                                         </div>
-                                        <div id="radar-animation" class="absolute inset-0 border-4 border-indigo-500 rounded-full opacity-0 animate-ping"></div>
                                     </div>
+                                    <!-- Ripple Animation -->
+                                    <div id="radar-animation" class="absolute w-28 h-28 border-2 border-indigo-500 rounded-full opacity-0 animate-ping"></div>
+                                    <div class="absolute w-40 h-40 border border-slate-100 rounded-full opacity-50"></div>
+                                    <div class="absolute w-56 h-56 border border-slate-50 rounded-full opacity-30"></div>
                                 </div>
-                                <div class="text-center mt-2">
-                                    <p id="location-status" class="font-bold text-slate-800">Mencari sinyal...</p>
-                                    <p id="distance-info" class="text-sm text-slate-500 mt-1">Menunggu koordinat...</p>
+                                <div class="mt-6">
+                                    <p id="location-status" class="text-lg font-bold text-slate-800">Mencari sinyal...</p>
+                                    <p id="distance-info" class="text-sm text-slate-500 mt-1 font-medium">Menunggu koordinat...</p>
                                 </div>
                             </div>
 
                             <!-- Chart Card -->
                             <div class="modern-card p-6">
-                                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Statistik Kehadiran</h3>
-                                <div class="h-48">
+                                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Statistik Kehadiran</h3>
+                                <div class="h-48 relative">
                                     <canvas id="attendanceChart"></canvas>
                                 </div>
                             </div>
@@ -396,7 +449,7 @@
                     </div>
                 </div>
 
-                <!-- Placeholder containers for dynamic views (Maintained IDs) -->
+                <!-- Placeholder containers for dynamic views -->
                 <div id="users-view" class="content-view fade-in hidden"></div>
                 <div id="attendance-data-view" class="content-view fade-in hidden"></div>
                 <div id="settings-view" class="content-view fade-in hidden"></div>
@@ -410,29 +463,29 @@
     <!-- ===== MODALS (Redesigned) ===== -->
     
     <!-- Loader Modal -->
-    <div id="loader-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[1003] transition-opacity">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4">
-            <div class="loader-dots relative w-20 h-5 mb-4">
-                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
-                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
-                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
-                <div class="absolute top-0 w-3 h-3 rounded-full bg-indigo-600"></div>
+    <div id="loader-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[1003] transition-opacity">
+        <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-white/50">
+            <div class="relative w-16 h-16 mb-4 text-indigo-600">
+                 <i class="ph-duotone ph-spinner-gap text-6xl animate-spin-slow"></i>
+                 <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-3 h-3 bg-indigo-600 rounded-full"></div>
+                 </div>
             </div>
-            <p id="loader-text" class="text-slate-700 font-semibold text-lg animate-pulse">Memproses...</p>
+            <p id="loader-text" class="text-slate-800 font-bold text-lg tracking-tight">Memproses...</p>
         </div>
     </div>
 
     <!-- Notification Modal -->
     <div id="notification-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1002] p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm transform transition-all scale-100 overflow-hidden">
-            <div class="p-6 text-center">
-                <div id="notification-icon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-indigo-100 text-indigo-600 text-3xl">
-                    <i class="fas fa-info"></i>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm transform transition-all scale-100 overflow-hidden border border-slate-100">
+            <div class="p-8 text-center">
+                <div id="notification-icon" class="mx-auto flex items-center justify-center h-20 w-20 rounded-full mb-6 bg-indigo-50 text-indigo-600 text-4xl shadow-inner">
+                    <i class="ph ph-info"></i>
                 </div>
-                <h3 id="notification-title" class="text-xl font-bold text-slate-900 mb-2">Notification</h3>
-                <p id="notification-message" class="text-sm text-slate-500 mb-6">Message goes here...</p>
+                <h3 id="notification-title" class="text-2xl font-bold text-slate-900 mb-2">Notification</h3>
+                <p id="notification-message" class="text-slate-500 mb-8 leading-relaxed">Message goes here...</p>
                 <div id="notification-buttons" class="grid grid-cols-1 gap-3">
-                    <button id="notification-close-btn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:text-sm">
+                    <button id="notification-close-btn" class="w-full inline-flex justify-center rounded-2xl border border-transparent shadow-lg shadow-indigo-500/20 px-4 py-3.5 bg-indigo-600 text-base font-bold text-white hover:bg-indigo-700 focus:outline-none transition-all hover:scale-[1.02]">
                         Mengerti
                     </button>
                 </div>
@@ -441,24 +494,30 @@
     </div>
 
     <!-- Selfie Modal -->
-    <div id="selfie-modal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-[1001] p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="text-lg font-bold text-slate-800">Verifikasi Foto</h3>
-                <button onclick="document.getElementById('selfie-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+    <div id="selfie-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[1001] p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh] border border-slate-200">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-camera mr-2 text-indigo-500"></i>Verifikasi Foto</h3>
+                <button onclick="document.getElementById('selfie-modal').classList.add('hidden')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
             </div>
-            <div class="p-0 relative bg-black flex-grow flex items-center justify-center group">
+            <div class="p-0 relative bg-black flex-grow flex items-center justify-center group overflow-hidden">
                 <video id="video-preview" class="w-full h-full object-cover transform scale-x-[-1]" autoplay playsinline></video>
                 <canvas id="selfie-canvas" class="hidden"></canvas>
-                <div class="absolute inset-0 border-[30px] border-black/30 pointer-events-none rounded-none"></div>
-                <div class="absolute inset-0 border-2 border-white/50 m-8 rounded-xl pointer-events-none border-dashed opacity-50"></div>
+                <!-- Camera Overlay UI -->
+                <div class="absolute inset-0 border-[40px] border-black/40 pointer-events-none rounded-none"></div>
+                <div class="absolute inset-0 border-2 border-white/40 m-10 rounded-2xl pointer-events-none border-dashed"></div>
+                <div class="absolute top-12 text-white/80 font-medium text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                    Pastikan wajah terlihat jelas
+                </div>
             </div>
             <div class="p-6 bg-white border-t border-slate-100 flex gap-4">
-                <button id="cancel-capture-btn" class="flex-1 px-4 py-3 border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
+                <button id="cancel-capture-btn" class="flex-1 px-4 py-3.5 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors">
                     Batal
                 </button>
-                <button id="capture-btn" class="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition-all transform active:scale-95 flex items-center justify-center">
-                    <i class="fas fa-camera mr-2"></i> Ambil & Absen
+                <button id="capture-btn" class="flex-1 px-4 py-3.5 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-aperture text-xl"></i> Ambil & Absen
                 </button>
             </div>
         </div>
@@ -466,39 +525,49 @@
 
     <!-- User Form Modal -->
     <div id="user-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-lg w-full transform transition-all">
-            <h3 id="user-form-title" class="text-2xl font-bold text-slate-800 mb-6">Form User</h3>
-            <form id="user-form" class="space-y-4">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full transform transition-all border border-slate-100">
+            <h3 id="user-form-title" class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="ph-duotone ph-user-plus text-indigo-500"></i>Form User</h3>
+            <form id="user-form" class="space-y-5">
                 <input type="hidden" id="original-email" name="originalEmail">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
-                    <input type="text" id="user-nama" name="nama" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                    <input type="email" id="user-email" name="email" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                    <input type="password" id="user-password" name="password" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                    <p class="text-xs text-slate-500 mt-1">Biarkan kosong jika tidak ingin mengubah password.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Nama Lengkap</label>
                     <div class="relative">
-                        <select id="user-role" name="role" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
+                        <i class="ph ph-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <input type="text" id="user-nama" name="nama" required class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Email</label>
+                    <div class="relative">
+                        <i class="ph ph-envelope-simple absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <input type="email" id="user-email" name="email" required class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
+                    <div class="relative">
+                        <i class="ph ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <input type="password" id="user-password" name="password" required class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5 ml-1">Biarkan kosong jika tidak ingin mengubah password.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Role</label>
+                    <div class="relative">
+                        <i class="ph ph-shield-check absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <select id="user-role" name="role" required class="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white transition-all">
                             <option value="User">User</option>
                             <option value="HR">HR</option>
                             <option value="Admin">Admin</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
-                            <i class="fas fa-chevron-down text-xs"></i>
+                            <i class="ph-bold ph-caret-down"></i>
                         </div>
                     </div>
                 </div>
-                <div class="pt-4 flex justify-end space-x-3">
-                    <button type="button" id="cancel-user-form-btn" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md font-medium">Simpan Data</button>
+                <div class="pt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-user-form-btn" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 font-bold transition-colors">Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -506,30 +575,35 @@
 
     <!-- Cuti Form Modal -->
     <div id="cuti-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-lg w-full">
-            <h3 id="cuti-form-title" class="text-2xl font-bold text-slate-800 mb-6">Form Pengajuan Cuti</h3>
-            <form id="cuti-form" class="space-y-4">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full border border-slate-100">
+            <h3 id="cuti-form-title" class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="ph-duotone ph-calendar-plus text-indigo-500"></i>Form Pengajuan Cuti</h3>
+            <form id="cuti-form" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Cuti</label>
-                    <select id="cuti-jenis" name="jenisCuti" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"></select>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Jenis Cuti</label>
+                    <div class="relative">
+                        <select id="cuti-jenis" name="jenisCuti" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none"></select>
+                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
+                            <i class="ph-bold ph-caret-down"></i>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Mulai</label>
-                        <input type="date" id="cuti-mulai" name="tanggalMulai" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Mulai</label>
+                        <input type="date" id="cuti-mulai" name="tanggalMulai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Selesai</label>
-                        <input type="date" id="cuti-selesai" name="tanggalSelesai" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Selesai</label>
+                        <input type="date" id="cuti-selesai" name="tanggalSelesai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan / Alasan</label>
-                    <textarea id="cuti-keterangan" name="keterangan" rows="3" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Jelaskan alasan cuti..."></textarea>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Keterangan / Alasan</label>
+                    <textarea id="cuti-keterangan" name="keterangan" rows="3" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" placeholder="Jelaskan alasan cuti..."></textarea>
                 </div>
-                <div class="pt-4 flex justify-end space-x-3">
-                    <button type="button" id="cancel-cuti-form-btn" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md font-medium">Ajukan</button>
+                <div class="pt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-cuti-form-btn" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 font-bold transition-colors">Ajukan</button>
                 </div>
             </form>
         </div>
@@ -537,14 +611,11 @@
     
 <script type="module">
 // ================================================================= //
-//         APLIKASI ABSENSI - LOGIC (SAME FUNCTIONALITY)             //
+//         APLIKASI ABSENSI - LOGIC (UPDATED FOR PHOSPHOR)           //
 // ================================================================= //
 
-// --- KONFIGURASI ---
-// PENTING: Ganti URL ini dengan URL Web app dari hasil deployment baru Anda.
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzVCKHZfUnORpoBlh8njCahGDvXbsouO1y2OwnVaDS2rRDx-nBR4v-TMWPMt3Avaxyz/exec';
 
-// --- STATE MANAGEMENT ---
 let currentUser = null;
 let appSettings = null;
 let officeLocations = [];
@@ -557,7 +628,6 @@ let attendanceChart = null;
 let lastPosition = null;
 let clockInterval = null;
 
-// --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
     setupEventListeners();
@@ -587,12 +657,10 @@ async function initLoginPage() {
         appSettings = settings;
         officeLocations = offices;
         applyTheme(settings.themeColor || 'blue');
-        localStorage.setItem('appTheme', settings.themeColor || 'blue');
         
-        // Update branding elements
-        const logo = document.getElementById('login-logo');
-        if(logo) logo.src = settings.logoUrl;
-        
+        // Update branding elements but keep our new SVG Logo structure if preferred, 
+        // or replace only text. For now we keep the new SVG hardcoded for better looks,
+        // just update text.
         const appName = document.getElementById('login-app-name');
         if(appName) appName.textContent = `Selamat Datang di ${settings.appName}`;
         
@@ -607,7 +675,6 @@ async function initLoginPage() {
             officeSelect.appendChild(option);
         });
     } catch (error) {
-        console.error("Error initializing login page:", error);
         showNotification('error', 'Koneksi Gagal', 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
     } finally {
         hideLoader();
@@ -618,7 +685,6 @@ function setupEventListeners() {
     document.getElementById('login-form').addEventListener('submit', handleLogin);
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
     
-    // UI Interaction Listeners
     const menuBtn = document.getElementById('menu-btn');
     const sidebar = document.getElementById('sidebar');
     const menuOverlay = document.getElementById('menu-overlay');
@@ -642,7 +708,6 @@ function setupEventListeners() {
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             e.currentTarget.classList.add('active');
             
-            // Auto close sidebar on mobile
             if (window.innerWidth < 768 && sidebar) {
                 sidebar.classList.add('-translate-x-full');
                 menuOverlay.classList.add('hidden');
@@ -666,7 +731,6 @@ function setupEventListeners() {
     document.getElementById('cancel-cuti-form-btn').addEventListener('click', () => document.getElementById('cuti-form-modal').classList.add('hidden'));
 }
 
-// --- API HELPER ---
 async function apiCall(body) {
     try {
         const response = await fetch(GAS_URL, {
@@ -680,12 +744,10 @@ async function apiCall(body) {
         if (result.status === 'error') throw new Error(result.message);
         return result.data;
     } catch (error) {
-        console.error('API Call Error:', error);
         throw error;
     }
 }
 
-// --- AUTHENTICATION ---
 async function handleLogin(e) {
     e.preventDefault();
     showLoader('Verifikasi Akun...');
@@ -720,12 +782,10 @@ function handleLogout() {
     window.location.reload();
 }
 
-// --- DASHBOARD ---
 async function initDashboard() {
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('dashboard-page').classList.remove('hidden');
     
-    // Tweak to ensure map renders correctly after hidden switch
     setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 200);
 
     document.getElementById('user-name-display').textContent = currentUser.nama;
@@ -757,7 +817,6 @@ async function initDashboard() {
         initChart();
         checkLocationStatus();
     } catch (error) {
-        console.error("Error initializing dashboard:", error);
         showNotification('error', 'Gagal Memuat Data', error.message);
     } finally {
         hideLoader();
@@ -774,24 +833,17 @@ function applyRolePermissions() {
     
     document.querySelectorAll('[data-permission]').forEach(el => {
         const permission = el.dataset.permission;
-        if (userRoleData[permission]) {
-            el.style.display = '';
-        } else {
-            el.style.display = 'none';
-        }
+        el.style.display = userRoleData[permission] ? '' : 'none';
     });
 }
 
 function updateUIWithSettings() {
     const theme = appSettings.themeColor || 'blue';
     applyTheme(theme);
-    localStorage.setItem('appTheme', theme);
     document.title = appSettings.appName;
     document.getElementById('dashboard-app-name').textContent = appSettings.appName;
-    document.getElementById('dashboard-logo').src = appSettings.logoUrl;
 }
 
-// --- ATTENDANCE PROCESS ---
 async function handleAttendance(status) {
     showLoader('Mencari Lokasi GPS...');
     try {
@@ -822,7 +874,6 @@ async function handleAttendance(status) {
     }
 }
 
-// --- GEOLOCATION & ANTI-SPOOFING ---
 function getCurrentPosition() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
@@ -835,10 +886,7 @@ function getCurrentPosition() {
 }
 
 function isGpsSpoof(position) {
-    // Basic checks
-    if (position.coords.accuracy < 3) { // Too perfect
-        return `Akurasi mencurigakan: ${position.coords.accuracy}m`;
-    }
+    if (position.coords.accuracy < 3) return `Akurasi mencurigakan: ${position.coords.accuracy}m`;
     const now = new Date().getTime();
     if (lastPosition) {
         const timeDiff = (now - lastPosition.timestamp) / 1000;
@@ -846,10 +894,8 @@ function isGpsSpoof(position) {
             position.coords.latitude, position.coords.longitude,
             lastPosition.coords.latitude, lastPosition.coords.longitude
         );
-        const speed = (distanceMoved / timeDiff) * 3.6; // km/h
-        if (speed > 800) { // Plane speed
-             return `Kecepatan perpindahan tidak wajar: ${speed.toFixed(0)} km/h`;
-        }
+        const speed = (distanceMoved / timeDiff) * 3.6; 
+        if (speed > 800) return `Kecepatan perpindahan tidak wajar: ${speed.toFixed(0)} km/h`;
     }
     lastPosition = { coords: position.coords, timestamp: now };
     return null;
@@ -883,30 +929,28 @@ async function checkLocationStatus() {
         
         if (distance <= selectedOffice.radius) {
             statusEl.textContent = 'Dalam Area Kantor';
-            statusEl.className = 'font-bold text-emerald-600';
+            statusEl.className = 'text-lg font-bold text-emerald-600';
             if(badgeEl) {
-                badgeEl.textContent = 'Dalam Area';
-                badgeEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-600 border border-emerald-200';
+                badgeEl.innerHTML = `<i class="ph-bold ph-check-circle text-emerald-600"></i> Dalam Area`;
+                badgeEl.className = 'mt-4 sm:mt-0 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-600 border border-emerald-200 flex items-center gap-2';
             }
             if(radar) radar.classList.add('border-emerald-500');
         } else {
             statusEl.textContent = 'Luar Area Kantor';
-            statusEl.className = 'font-bold text-rose-600';
+            statusEl.className = 'text-lg font-bold text-rose-600';
             if(badgeEl) {
-                badgeEl.textContent = 'Luar Area';
-                badgeEl.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-600 border border-rose-200';
+                badgeEl.innerHTML = `<i class="ph-bold ph-warning-circle text-rose-600"></i> Luar Area`;
+                badgeEl.className = 'mt-4 sm:mt-0 px-4 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-600 border border-rose-200 flex items-center gap-2';
             }
              if(radar) radar.classList.add('border-rose-500');
         }
     } catch (error) {
         statusEl.textContent = 'GPS Error';
-        statusEl.className = 'font-bold text-slate-400';
+        statusEl.className = 'text-lg font-bold text-slate-400';
         distanceEl.textContent = 'Gagal mendeteksi lokasi.';
     }
 }
 
-
-// --- SELFIE CAPTURE ---
 let videoStream = null;
 let attendanceInfo = {};
 
@@ -940,7 +984,6 @@ async function captureSelfie() {
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    // Flip horizontal for natural selfie feel if needed, but for data backend keep it standard
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const base64Photo = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
@@ -959,7 +1002,6 @@ async function captureSelfie() {
         });
         showNotification('success', 'Absen Berhasil', `Anda berhasil absen ${attendanceInfo.status}.`);
         
-        // Refresh Data
         const data = await apiCall({ action: 'getDashboardData', user: currentUser });
         attendanceData = data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         updateLastAttendanceInfo();
@@ -973,15 +1015,13 @@ async function captureSelfie() {
     }
 }
 
-// --- UI UPDATES & VIEWS ---
 function showView(viewId) {
     document.querySelectorAll('.content-view').forEach(view => view.classList.add('hidden'));
     const view = document.getElementById(viewId);
     view.classList.remove('hidden');
     
-    // Trigger animations or specific loads
     view.classList.remove('fade-in');
-    void view.offsetWidth; // trigger reflow
+    void view.offsetWidth; 
     view.classList.add('fade-in');
 
     switch(viewId) {
@@ -1008,7 +1048,7 @@ function updateLastAttendanceInfo() {
     const infoEl = document.getElementById('last-attendance-info');
     if (attendanceData.length > 0) {
         const last = attendanceData[0];
-        infoEl.innerHTML = `<span class="font-semibold text-slate-700">${last.status}</span> • ${last.lokasiKantor} • ${new Date(last.timestamp).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+        infoEl.innerHTML = `<span class="font-bold text-slate-700">${last.status}</span> • ${last.lokasiKantor} • ${new Date(last.timestamp).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
     } else {
         infoEl.textContent = 'Belum ada data hari ini.';
     }
@@ -1033,25 +1073,24 @@ function checkAttendanceStatus() {
     alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-500', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-500');
     
     if (diffMinutes > 0) {
-        alertEl.classList.add('bg-red-50', 'text-red-800', 'border-red-500');
+        alertEl.className = 'rounded-2xl shadow-sm border p-4 flex items-start gap-4 bg-red-50 text-red-800 border-red-200';
         alertEl.innerHTML = `
-            <i class="fas fa-exclamation-circle text-xl mr-3"></i>
+            <div class="bg-red-100 p-2 rounded-full"><i class="ph-bold ph-warning-circle text-xl text-red-600"></i></div>
             <div>
-                <span class="font-bold">Terlambat!</span> 
-                <p class="text-sm">Anda absen masuk ${diffMinutes} menit lewat dari batas waktu.</p>
+                <span class="font-bold text-lg">Terlambat!</span> 
+                <p class="text-sm font-medium opacity-90">Anda absen masuk ${diffMinutes} menit lewat dari batas waktu.</p>
             </div>`;
     } else {
-        alertEl.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-500');
+        alertEl.className = 'rounded-2xl shadow-sm border p-4 flex items-start gap-4 bg-emerald-50 text-emerald-800 border-emerald-200';
         alertEl.innerHTML = `
-            <i class="fas fa-check-circle text-xl mr-3"></i>
+            <div class="bg-emerald-100 p-2 rounded-full"><i class="ph-bold ph-check-circle text-xl text-emerald-600"></i></div>
             <div>
-                <span class="font-bold">Tepat Waktu!</span> 
-                <p class="text-sm">Terima kasih telah hadir sebelum jam ${selectedOffice.batasJamMasuk}.</p>
+                <span class="font-bold text-lg">Tepat Waktu!</span> 
+                <p class="text-sm font-medium opacity-90">Terima kasih telah hadir sebelum jam ${selectedOffice.batasJamMasuk}.</p>
             </div>`;
     }
 }
 
-// --- MAP & CHARTS ---
 function initMap() {
     if (map) map.remove();
     map = L.map('map');
@@ -1073,9 +1112,9 @@ function initMap() {
 function addOfficeToMap(office) {
     const icon = L.divIcon({ 
         className: 'bg-transparent',
-        html: `<div class="w-8 h-8 bg-indigo-600 rounded-full border-4 border-white shadow-lg flex items-center justify-center"><i class="fas fa-building text-white text-xs"></i></div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32]
+        html: `<div class="w-10 h-10 bg-indigo-600 rounded-full border-4 border-white shadow-xl flex items-center justify-center"><i class="ph-bold ph-buildings text-white text-lg"></i></div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
     });
     
     L.marker([office.latitude, office.longitude], { icon }).addTo(map).bindPopup(`<b>${office.nama}</b>`);
@@ -1092,38 +1131,37 @@ function addOfficeToMap(office) {
 
 function refreshMap() {
     map.eachLayer(layer => {
-        // Keep base tiles and office markers (which usually don't have user images)
-        if (layer instanceof L.Marker && layer.options.icon?.options?.html?.includes('fa-building')) return;
+        if (layer instanceof L.Marker && layer.options.icon?.options?.html?.includes('ph-buildings')) return;
         if (layer instanceof L.Marker) map.removeLayer(layer);
     });
     
     attendanceData.forEach(data => {
         if(!data.latitude || !data.longitude) return;
         const popupContent = `
-            <div class="custom-popup p-0">
+            <div class="custom-popup p-0 font-sans">
                 <div class="relative">
                     <img src="${data.foto_url}" alt="selfie" class="w-full h-32 object-cover"/>
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                        <p class="text-white text-xs font-bold">${data.nama}</p>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                        <p class="text-white text-sm font-bold">${data.nama}</p>
                     </div>
                 </div>
-                <div class="p-2 text-xs">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-gray-500">Status</span>
+                <div class="p-3 text-xs">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-500 font-medium">Status</span>
                         <span class="font-bold ${data.status === 'Masuk' ? 'text-green-600' : 'text-red-600'}">${data.status}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Jam</span>
-                        <span class="font-mono">${new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                        <span class="text-gray-500 font-medium">Jam</span>
+                        <span class="font-mono font-bold text-slate-700">${new Date(data.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                     </div>
                 </div>
             </div>`;
             
         const markerColor = data.status === 'Masuk' ? 'emerald' : 'rose';
-        const iconHtml = `<div class="w-8 h-8 bg-${markerColor}-500 rounded-full border-2 border-white shadow-md flex items-center justify-center"><i class="fas fa-user text-white text-xs"></i></div>`;
+        const iconHtml = `<div class="w-9 h-9 bg-${markerColor}-500 rounded-full border-[3px] border-white shadow-lg flex items-center justify-center"><i class="ph-bold ph-user text-white text-sm"></i></div>`;
         
         L.marker([data.latitude, data.longitude], {
-             icon: L.divIcon({ className: 'bg-transparent', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] })
+             icon: L.divIcon({ className: 'bg-transparent', html: iconHtml, iconSize: [36, 36], iconAnchor: [18, 36] })
         }).addTo(map).bindPopup(popupContent);
     });
 }
@@ -1166,30 +1204,31 @@ function initChart() {
                 legend: { display: false },
                 tooltip: { 
                     backgroundColor: '#1e293b',
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false
+                    padding: 14,
+                    cornerRadius: 12,
+                    displayColors: false,
+                    titleFont: { size: 13 },
+                    bodyFont: { size: 14, weight: 'bold' }
                 }
             },
             scales: {
                 y: { 
                     beginAtZero: true, 
-                    grid: { color: '#f1f5f9' },
-                    ticks: { precision: 0 } 
+                    grid: { color: '#f1f5f9', borderDash: [5, 5] },
+                    ticks: { precision: 0, font: { weight: '500' } } 
                 },
                 x: {
-                    grid: { display: false }
+                    grid: { display: false },
+                    ticks: { font: { weight: '600' } }
                 }
             }
         }
     });
 }
 
-// --- DYNAMIC VIEW LOADERS (Styled) ---
-
 async function loadSettingsView() {
     const view = document.getElementById('settings-view');
-    view.innerHTML = `<div class="modern-card p-8 flex items-center justify-center text-slate-500"><i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat pengaturan...</div>`;
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat pengaturan...</span></div>`;
 
     const [settings, offices, jenisCuti, roles] = await Promise.all([
         apiCall({ action: 'getSettings' }),
@@ -1202,24 +1241,19 @@ async function loadSettingsView() {
     officeLocations = offices;
     rolePermissions = roles;
 
-    // Use specific HTML structure for Settings
     view.innerHTML = `
         <form id="settings-form" class="max-w-4xl mx-auto space-y-8 pb-12">
             <!-- General Settings -->
             <div class="modern-card p-6 md:p-8">
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i class="fas fa-sliders-h mr-3 text-indigo-500"></i>Pengaturan Umum</h2>
+                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center"><i class="ph-duotone ph-sliders mr-3 text-indigo-500 text-2xl"></i>Pengaturan Umum</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Aplikasi</label>
-                        <input type="text" name="appName" value="${settings.appName}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Nama Aplikasi</label>
+                        <input type="text" name="appName" value="${settings.appName}" class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-medium">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">URL Logo</label>
-                        <input type="url" name="logoUrl" value="${settings.logoUrl}" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Warna Tema</label>
-                        <select name="themeColor" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Warna Tema</label>
+                        <select name="themeColor" class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-medium">
                             <option value="blue">Indigo (Default)</option>
                             <option value="green">Emerald</option>
                             <option value="red">Rose</option>
@@ -1232,8 +1266,8 @@ async function loadSettingsView() {
             <!-- Role Settings -->
              <div class="modern-card p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-user-shield mr-3 text-indigo-500"></i>Role & Izin</h2>
-                    <button type="button" id="add-role-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Role</button>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-shield-star mr-3 text-indigo-500 text-2xl"></i>Role & Izin</h2>
+                    <button type="button" id="add-role-btn" class="text-sm bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl hover:bg-indigo-100 font-bold transition-colors flex items-center"><i class="ph-bold ph-plus mr-1"></i> Role</button>
                 </div>
                 <div id="role-settings-container" class="space-y-4"></div>
             </div>
@@ -1241,8 +1275,8 @@ async function loadSettingsView() {
             <!-- Cuti Settings -->
             <div class="modern-card p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-calendar-alt mr-3 text-indigo-500"></i>Kategori Cuti</h2>
-                    <button type="button" id="add-jenis-cuti-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Kategori</button>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-calendar mr-3 text-indigo-500 text-2xl"></i>Kategori Cuti</h2>
+                    <button type="button" id="add-jenis-cuti-btn" class="text-sm bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl hover:bg-indigo-100 font-bold transition-colors flex items-center"><i class="ph-bold ph-plus mr-1"></i> Kategori</button>
                 </div>
                 <div id="jenis-cuti-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </div>
@@ -1250,14 +1284,16 @@ async function loadSettingsView() {
             <!-- Office Settings -->
             <div class="modern-card p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="fas fa-map-marked mr-3 text-indigo-500"></i>Lokasi Kantor</h2>
-                    <button type="button" id="add-office-btn" class="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-semibold transition-colors">+ Tambah Lokasi</button>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-map-pin mr-3 text-indigo-500 text-2xl"></i>Lokasi Kantor</h2>
+                    <button type="button" id="add-office-btn" class="text-sm bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl hover:bg-indigo-100 font-bold transition-colors flex items-center"><i class="ph-bold ph-plus mr-1"></i> Lokasi</button>
                 </div>
                 <div id="office-settings-container" class="space-y-6"></div>
             </div>
 
             <div class="sticky bottom-4">
-                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-slate-800 transition-colors transform hover:-translate-y-1">Simpan Semua Perubahan</button>
+                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-slate-800 transition-colors transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-floppy-disk"></i> Simpan Semua Perubahan
+                </button>
             </div>
         </form>
     `;
@@ -1267,7 +1303,6 @@ async function loadSettingsView() {
     renderJenisCutiSettings(jenisCuti);
     renderRoleSettings(roles);
 
-    // Event listeners for dynamic buttons (Add Office, Add Cuti, Add Role)
     document.getElementById('add-office-btn').addEventListener('click', () => {
         const currentOfficeForms = [];
          document.querySelectorAll('.office-form-group').forEach(group => {
@@ -1302,45 +1337,43 @@ async function loadSettingsView() {
     document.getElementById('settings-form').addEventListener('submit', handleUpdateSettings);
 }
 
-// Render functions modified to match modern UI
 function renderOfficeSettings(offices) {
     const container = document.getElementById('office-settings-container');
     officeLocations = offices; 
     container.innerHTML = offices.map((office, index) => `
-        <div class="office-form-group border border-slate-200 p-5 rounded-xl bg-slate-50 relative group transition-colors hover:border-indigo-300" data-id="${index}">
-            <button type="button" class="delete-office-btn absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="office-form-group border border-slate-200 p-6 rounded-2xl bg-slate-50 relative group transition-colors hover:border-indigo-300" data-id="${index}">
+            <button type="button" class="delete-office-btn absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"><i class="ph-bold ph-trash text-lg"></i></button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="md:col-span-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase">Nama Lokasi</label>
-                    <input type="text" name="nama" value="${office.nama}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 font-semibold text-slate-800">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Nama Lokasi</label>
+                    <input type="text" name="nama" value="${office.nama}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 font-bold text-slate-800">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Latitude</label>
-                    <input type="number" step="any" name="latitude" value="${office.latitude}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Latitude</label>
+                    <input type="number" step="any" name="latitude" value="${office.latitude}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Longitude</label>
-                    <input type="number" step="any" name="longitude" value="${office.longitude}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Longitude</label>
+                    <input type="number" step="any" name="longitude" value="${office.longitude}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase">Radius (m)</label>
-                    <input type="number" name="radius" value="${office.radius}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Radius (m)</label>
+                    <input type="number" name="radius" value="${office.radius}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-medium">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase">Masuk</label>
-                        <input type="time" name="batasJamMasuk" value="${office.batasJamMasuk}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Masuk</label>
+                        <input type="time" name="batasJamMasuk" value="${office.batasJamMasuk}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-medium">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase">Keluar</label>
-                        <input type="time" name="batasJamKeluar" value="${office.batasJamKeluar}" class="mt-1 w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Keluar</label>
+                        <input type="time" name="batasJamKeluar" value="${office.batasJamKeluar}" class="w-full rounded-xl border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-medium">
                     </div>
                 </div>
             </div>
         </div>
     `).join('');
     
-    // Add delete listeners
     document.querySelectorAll('.delete-office-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.target.closest('.office-form-group').remove();
@@ -1350,9 +1383,10 @@ function renderOfficeSettings(offices) {
 
 function createJenisCutiInputHTML(value, index) {
     return `
-        <div class="jenis-cuti-item flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200" data-id="${index}">
-            <input type="text" name="jenisCuti" value="${value}" class="w-full bg-transparent border-none focus:ring-0 text-sm font-medium">
-            <button type="button" class="delete-jenis-cuti-btn text-slate-400 hover:text-red-500 p-1"><i class="fas fa-times"></i></button>
+        <div class="jenis-cuti-item flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200" data-id="${index}">
+            <div class="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg"><i class="ph-bold ph-tag"></i></div>
+            <input type="text" name="jenisCuti" value="${value}" class="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700">
+            <button type="button" class="delete-jenis-cuti-btn text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg transition-colors"><i class="ph-bold ph-x"></i></button>
         </div>`;
 }
 
@@ -1378,17 +1412,17 @@ function createRoleInputHTML(role, index) {
     ];
 
     const checkboxesHTML = permissions.map(p => `
-        <label class="flex items-center space-x-2 text-sm text-slate-600 bg-white p-2 rounded border border-slate-100">
-            <input type="checkbox" name="${p.key}" ${role[p.key] ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
-            <span>${p.label}</span>
+        <label class="flex items-center space-x-3 text-sm text-slate-600 bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+            <input type="checkbox" name="${p.key}" ${role[p.key] ? 'checked' : ''} class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
+            <span class="font-medium">${p.label}</span>
         </label>
     `).join('');
 
     return `
-        <div class="role-form-group border border-slate-200 p-4 rounded-xl bg-slate-50 relative" data-id="${index}">
-            <button type="button" class="delete-role-btn absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
-            <div class="space-y-3">
-                <input type="text" name="roleName" value="${role.roleName}" class="block w-full rounded-lg border-slate-300 focus:ring-indigo-500 font-bold text-slate-800" placeholder="Nama Role">
+        <div class="role-form-group border border-slate-200 p-5 rounded-2xl bg-slate-50 relative" data-id="${index}">
+            <button type="button" class="delete-role-btn absolute top-5 right-5 text-slate-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-lg"><i class="ph-bold ph-trash text-lg"></i></button>
+            <div class="space-y-4">
+                <input type="text" name="roleName" value="${role.roleName}" class="block w-full rounded-xl border-slate-300 focus:ring-indigo-500 font-bold text-slate-800 text-lg placeholder-slate-400" placeholder="Nama Role">
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                     ${checkboxesHTML}
                 </div>
@@ -1408,11 +1442,9 @@ function addDeleteListenerToRole() {
     });
 }
 
-// ... (Other functions like loadAttendanceDataView, loadUsersView, etc. just need basic HTML wrapper updates)
-
 async function loadAttendanceDataView() {
     const view = document.getElementById('attendance-data-view');
-    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat data...</div>`;
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat data...</span></div>`;
     try {
         const allAttendance = await apiCall({ action: 'getDashboardData', user: currentUser });
         let filteredData = [...allAttendance].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -1424,11 +1456,11 @@ async function loadAttendanceDataView() {
                 <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h2 class="text-xl font-bold text-slate-800">Laporan Absensi</h2>
                     <div class="flex flex-wrap gap-2 items-center">
-                        <input type="date" id="start-date-filter" value="${firstDayOfMonth}" class="rounded-lg border-slate-200 text-sm">
-                        <span class="text-slate-400">-</span>
-                        <input type="date" id="end-date-filter" value="${today}" class="rounded-lg border-slate-200 text-sm">
-                        <button id="download-absensi-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                            <i class="fas fa-file-excel mr-2"></i>Export
+                        <input type="date" id="start-date-filter" value="${firstDayOfMonth}" class="rounded-lg border-slate-200 text-sm font-medium">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="date" id="end-date-filter" value="${today}" class="rounded-lg border-slate-200 text-sm font-medium">
+                        <button id="download-absensi-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2">
+                            <i class="ph-bold ph-microsoft-excel-logo"></i> Export
                         </button>
                     </div>
                 </div>
@@ -1436,10 +1468,10 @@ async function loadAttendanceDataView() {
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lokasi</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Waktu</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lokasi</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody id="attendance-report-body" class="bg-white divide-y divide-slate-100 text-sm text-slate-600"></tbody>
@@ -1458,14 +1490,14 @@ async function loadAttendanceDataView() {
             }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             const tableBody = document.getElementById('attendance-report-body');
-            tableBody.innerHTML = filteredData.length === 0 ? '<tr><td colspan="4" class="text-center py-8 text-slate-400">Tidak ada data pada rentang tanggal ini.</td></tr>' :
+            tableBody.innerHTML = filteredData.length === 0 ? '<tr><td colspan="4" class="text-center py-12 text-slate-400"><i class="ph ph-folder-dashed text-4xl mb-2 block mx-auto"></i>Tidak ada data pada rentang tanggal ini.</td></tr>' :
                 filteredData.map(item => `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap font-mono text-xs">${new Date(item.timestamp).toLocaleString('id-ID', { hour12: false })}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${item.nama}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-500">${new Date(item.timestamp).toLocaleString('id-ID', { hour12: false })}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-800">${item.nama}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${item.lokasiKantor}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'Masuk' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'Masuk' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}">
                                 ${item.status}
                             </span>
                         </td>
@@ -1492,29 +1524,29 @@ async function loadAttendanceDataView() {
         document.getElementById('download-absensi-excel-btn').addEventListener('click', downloadExcel);
         renderTable();
     } catch (error) {
-        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500 font-bold">Error: ${error.message}</div>`;
     }
 }
 
 async function loadUsersView() {
     const view = document.getElementById('users-view');
-    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat user...</div>`;
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat user...</span></div>`;
     try {
         const users = await apiCall({ action: 'getUsers' });
         view.innerHTML = `
             <div class="modern-card overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h2 class="text-xl font-bold text-slate-800">Manajemen Karyawan</h2>
-                    <button id="add-user-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"><i class="fas fa-plus mr-2"></i>User Baru</button>
+                    <button id="add-user-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2"><i class="ph-bold ph-user-plus"></i> User Baru</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Nama</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Role</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Nama</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Email</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Role</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="user-list-body" class="bg-white divide-y divide-slate-100 text-sm"></tbody>
@@ -1525,12 +1557,12 @@ async function loadUsersView() {
         const userListBody = document.getElementById('user-list-body');
         userListBody.innerHTML = users.map(user => `
             <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900">${user.nama}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-slate-600">${user.email}</td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-semibold border border-slate-200">${user.role}</span></td>
+                <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-900">${user.nama}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">${user.email}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md text-xs font-bold border border-slate-200">${user.role}</span></td>
                 <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button class="edit-user-btn text-indigo-600 hover:text-indigo-900 p-1" data-email='${user.email}' data-user='${JSON.stringify(user)}'><i class="fas fa-pen"></i></button>
-                    <button class="delete-user-btn text-rose-600 hover:text-rose-900 p-1" data-email="${user.email}"><i class="fas fa-trash"></i></button>
+                    <button class="edit-user-btn text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-2 rounded-lg hover:bg-indigo-100 transition-colors" data-email='${user.email}' data-user='${JSON.stringify(user)}'><i class="ph-bold ph-pencil-simple"></i></button>
+                    <button class="delete-user-btn text-rose-600 hover:text-rose-900 bg-rose-50 p-2 rounded-lg hover:bg-rose-100 transition-colors" data-email="${user.email}"><i class="ph-bold ph-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -1538,7 +1570,7 @@ async function loadUsersView() {
         document.getElementById('add-user-btn').addEventListener('click', () => {
             const form = document.getElementById('user-form');
             form.reset();
-            document.getElementById('user-form-title').textContent = 'Tambah User Baru';
+            document.getElementById('user-form-title').innerHTML = '<i class="ph-duotone ph-user-plus text-indigo-500 mr-2"></i>Tambah User Baru';
             document.getElementById('original-email').value = '';
             document.getElementById('user-email').disabled = false;
             document.getElementById('user-password').required = true;
@@ -1547,29 +1579,28 @@ async function loadUsersView() {
         document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', handleEditUserClick));
         document.querySelectorAll('.delete-user-btn').forEach(btn => btn.addEventListener('click', handleDeleteUserClick));
     } catch(error) {
-        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500 font-bold">Error: ${error.message}</div>`;
     }
 }
 
-// ... Spoof Logs and Cuti View follow the same pattern of wrapping content in .modern-card
 async function loadSpoofLogView() {
     const view = document.getElementById('spoof-log-view');
-    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-circle-notch fa-spin mr-2"></i> Memuat log...</div>`;
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat log...</span></div>`;
     try {
         const logs = await apiCall({ action: 'getSpoofLogs' });
         let tableHTML = `
             <div class="modern-card overflow-hidden">
-                <div class="p-6 border-b border-slate-100 bg-rose-50">
-                    <h2 class="text-xl font-bold text-rose-700"><i class="fas fa-shield-alt mr-2"></i>Log Keamanan (GPS Spoofing)</h2>
+                <div class="p-6 border-b border-rose-100 bg-rose-50/50">
+                    <h2 class="text-xl font-bold text-rose-700 flex items-center"><i class="ph-duotone ph-shield-warning mr-2 text-2xl"></i>Log Keamanan (GPS Spoofing)</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Waktu</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Email User</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Koordinat</th>
-                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Anomali</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Waktu</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Email User</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Koordinat</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Anomali</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-100 text-sm">`;
@@ -1577,19 +1608,19 @@ async function loadSpoofLogView() {
             logs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(log => {
                 tableHTML += `
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-xs">${new Date(log.timestamp).toLocaleString('id-ID')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${log.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-xs font-bold">${new Date(log.timestamp).toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-700">${log.email}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-xs font-mono">${log.latitude.toFixed(5)}, ${log.longitude.toFixed(5)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-rose-600 font-semibold bg-rose-50">${log.reason}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-rose-600 font-bold bg-rose-50">${log.reason}</td>
                     </tr>`;
             });
         } else {
-             tableHTML += `<tr><td colspan="4" class="text-center py-8 text-slate-400">Tidak ada aktivitas mencurigakan.</td></tr>`;
+             tableHTML += `<tr><td colspan="4" class="text-center py-12 text-slate-400"><i class="ph ph-shield-check text-4xl mb-2 block mx-auto text-emerald-400"></i>Tidak ada aktivitas mencurigakan.</td></tr>`;
         }
         tableHTML += `</tbody></table></div></div>`;
         view.innerHTML = tableHTML;
     } catch(error) {
-        view.innerHTML = `<div class="modern-card p-6 text-rose-500">Error: ${error.message}</div>`;
+        view.innerHTML = `<div class="modern-card p-6 text-rose-500 font-bold">Error: ${error.message}</div>`;
     }
 }
 
@@ -1597,14 +1628,14 @@ async function loadEmployeeLocationsView() {
     const view = document.getElementById('employee-locations-view');
     view.innerHTML = `
         <div class="modern-card p-0 overflow-hidden flex flex-col h-[70vh]">
-            <div class="p-4 bg-white border-b border-slate-100 z-10 shadow-sm">
-                <h2 class="text-lg font-bold text-slate-800"><i class="fas fa-map-marked-alt text-indigo-500 mr-2"></i>Peta Lokasi Karyawan (Live)</h2>
+            <div class="p-5 bg-white border-b border-slate-100 z-10 shadow-sm flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-map-trifold text-indigo-500 mr-2 text-xl"></i>Peta Lokasi Karyawan (Live)</h2>
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div> Realtime</span>
             </div>
             <div class="flex-1 w-full bg-slate-100 relative z-0" id="employee-map"></div>
         </div>`;
         
     if (employeeMap) employeeMap.remove();
-    // Delay slightly to allow DOM to settle
     setTimeout(async () => {
         employeeMap = L.map('employee-map').setView([-2.548926, 118.0148634], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(employeeMap);
@@ -1620,15 +1651,15 @@ async function loadEmployeeLocationsView() {
             }
             locations.forEach(loc => {
                 const markerColor = loc.status === 'Masuk' ? 'emerald' : 'rose';
-                const htmlIcon = `<div class="w-8 h-8 bg-${markerColor}-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white"><i class="fas fa-user text-xs"></i></div>`;
+                const htmlIcon = `<div class="w-9 h-9 bg-${markerColor}-500 rounded-full border-[3px] border-white shadow-xl flex items-center justify-center text-white"><i class="ph-bold ph-user text-sm"></i></div>`;
                 
                 L.marker([loc.latitude, loc.longitude], {
-                     icon: L.divIcon({ className: 'bg-transparent', html: htmlIcon, iconSize: [32, 32] })
+                     icon: L.divIcon({ className: 'bg-transparent', html: htmlIcon, iconSize: [36, 36] })
                 }).addTo(employeeMap).bindPopup(`
-                    <div class="p-2 text-center">
-                        <p class="font-bold text-slate-800">${loc.nama}</p>
-                        <p class="text-xs text-slate-500">${loc.status} di ${loc.lokasiKantor}</p>
-                        <p class="text-xs text-slate-400 font-mono mt-1">${new Date(loc.timestamp).toLocaleTimeString('id-ID')}</p>
+                    <div class="p-3 text-center font-sans">
+                        <p class="font-bold text-slate-800 text-sm">${loc.nama}</p>
+                        <p class="text-xs text-slate-500 font-medium">${loc.status} di ${loc.lokasiKantor}</p>
+                        <p class="text-xs text-slate-400 font-mono mt-1 bg-slate-100 py-1 rounded">${new Date(loc.timestamp).toLocaleTimeString('id-ID')}</p>
                     </div>
                 `);
             });
@@ -1642,7 +1673,7 @@ async function loadEmployeeLocationsView() {
 
 async function loadCutiView() {
     const view = document.getElementById('cuti-view');
-    view.innerHTML = `<div class="modern-card p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat data cuti...</div>`;
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat data cuti...</span></div>`;
     const isManager = currentUser.role === 'Admin' || currentUser.role === 'HR';
 
     view.innerHTML = `
@@ -1650,30 +1681,29 @@ async function loadCutiView() {
             <!-- User's Cuti Card -->
             <div class="modern-card p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800">Pengajuan Saya</h2>
-                    <button id="create-cuti-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"><i class="fas fa-plus mr-2"></i>Ajukan Cuti</button>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="ph-duotone ph-file-text text-indigo-500"></i> Pengajuan Saya</h2>
+                    <button id="create-cuti-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2"><i class="ph-bold ph-plus"></i> Ajukan Cuti</button>
                 </div>
                 <div id="status-cuti-container" class="overflow-x-auto"></div>
             </div>
             
             <!-- Manager View -->
             <div id="laporan-cuti-wrapper" class="${isManager ? '' : 'hidden'} modern-card p-6">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Approval & Laporan (HR/Admin)</h3>
+                <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="ph-duotone ph-user-list text-indigo-500"></i> Approval & Laporan (HR/Admin)</h3>
                 
                 <div class="flex flex-wrap gap-4 items-center mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-slate-500">Periode:</span>
-                        <input type="date" id="cuti-start-date" class="rounded-lg border-slate-300 text-sm">
-                        <span class="text-slate-400">-</span>
-                        <input type="date" id="cuti-end-date" class="rounded-lg border-slate-300 text-sm">
+                        <span class="text-sm font-bold text-slate-500">Periode:</span>
+                        <input type="date" id="cuti-start-date" class="rounded-lg border-slate-300 text-sm font-medium">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="date" id="cuti-end-date" class="rounded-lg border-slate-300 text-sm font-medium">
                     </div>
-                    <button id="download-cuti-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"><i class="fas fa-file-excel mr-2"></i>Excel</button>
+                    <button id="download-cuti-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"><i class="ph-bold ph-microsoft-excel-logo"></i> Excel</button>
                 </div>
                 <div id="laporan-cuti-container" class="overflow-x-auto"></div>
             </div>
         </div>`;
     
-    // ... (Keep existing logic for button listeners)
     document.getElementById('create-cuti-btn').addEventListener('click', async () => {
         try {
             showLoader('Menyiapkan form...');
@@ -1737,33 +1767,33 @@ async function loadCutiView() {
 }
 
 function renderCutiTable(data, isManagerView) {
-    if (!data || data.length === 0) return '<div class="text-center py-6 text-slate-400 bg-slate-50 rounded-lg">Belum ada pengajuan cuti.</div>';
+    if (!data || data.length === 0) return '<div class="text-center py-10 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200"><i class="ph ph-calendar-x text-3xl mb-2 block mx-auto"></i>Belum ada pengajuan cuti.</div>';
     
     const statusColor = {
-        'Pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+        'Pending': 'bg-amber-100 text-amber-700 border-amber-200',
         'Disetujui': 'bg-emerald-100 text-emerald-700 border-emerald-200',
         'Ditolak': 'bg-rose-100 text-rose-700 border-rose-200',
     };
     
     let table = `<table class="min-w-full divide-y divide-slate-100"><thead class="bg-slate-50"><tr>`;
-    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Karyawan</th>`;
-    table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Periode</th>
-                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Jenis</th>
-                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Aksi</th>
+    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Karyawan</th>`;
+    table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Periode</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jenis</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>
               </tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
               
     data.forEach(c => {
         table += `<tr class="hover:bg-slate-50 transition-colors">`;
-        if (isManagerView) table += `<td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${c.nama}</td>`;
-        table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600">${new Date(c.tanggalMulai).toLocaleDateString('id-ID')} <span class="text-slate-300 mx-1">→</span> ${new Date(c.tanggalSelesai).toLocaleDateString('id-ID')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-slate-700">${c.jenisCuti}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium">
-                        <button data-id="${c.id}" class="view-cuti-doc-btn text-slate-400 hover:text-indigo-600 mr-3 transition-colors" title="Lihat Dokumen PDF"><i class="fas fa-file-pdf fa-lg"></i></button>`;
+        if (isManagerView) table += `<td class="px-6 py-4 whitespace-nowrap font-bold text-slate-800">${c.nama}</td>`;
+        table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">${new Date(c.tanggalMulai).toLocaleDateString('id-ID')} <span class="text-slate-300 mx-1">→</span> ${new Date(c.tanggalSelesai).toLocaleDateString('id-ID')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">${c.jenisCuti}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium flex items-center gap-2">
+                        <button data-id="${c.id}" class="view-cuti-doc-btn text-slate-400 hover:text-indigo-600 bg-slate-50 p-1.5 rounded-lg transition-colors" title="Lihat Dokumen PDF"><i class="ph-bold ph-file-pdf text-lg"></i></button>`;
         if (isManagerView && c.status === 'Pending') {
-            table += `<button data-id="${c.id}" data-nama="${c.nama}" data-status="Disetujui" class="update-cuti-status-btn text-emerald-500 hover:text-emerald-700 mr-2 bg-emerald-50 p-1.5 rounded-lg transition-colors" title="Setujui"><i class="fas fa-check"></i></button>
-                      <button data-id="${c.id}" data-nama="${c.nama}" data-status="Ditolak" class="update-cuti-status-btn text-rose-500 hover:text-rose-700 bg-rose-50 p-1.5 rounded-lg transition-colors" title="Tolak"><i class="fas fa-times"></i></button>`;
+            table += `<button data-id="${c.id}" data-nama="${c.nama}" data-status="Disetujui" class="update-cuti-status-btn text-emerald-500 hover:text-emerald-700 bg-emerald-50 p-1.5 rounded-lg transition-colors border border-emerald-100" title="Setujui"><i class="ph-bold ph-check text-lg"></i></button>
+                      <button data-id="${c.id}" data-nama="${c.nama}" data-status="Ditolak" class="update-cuti-status-btn text-rose-500 hover:text-rose-700 bg-rose-50 p-1.5 rounded-lg transition-colors border border-rose-100" title="Tolak"><i class="ph-bold ph-x text-lg"></i></button>`;
         }
         table += `</td></tr>`;
     });
@@ -1771,12 +1801,11 @@ function renderCutiTable(data, isManagerView) {
     return table;
 }
 
-// --- FORM HANDLERS & HELPERS ---
 async function handleUpdateSettings(e) {
     e.preventDefault();
     showLoader('Menyimpan Pengaturan...');
     const form = e.target;
-    // ... (Data collection logic matches original exactly)
+    
     const generalSettingsData = { appName: form.appName.value, logoUrl: form.logoUrl.value, themeColor: form.themeColor.value };
     const officesData = [];
     document.querySelectorAll('.office-form-group').forEach(group => {
@@ -1825,7 +1854,7 @@ function handleEditUserClick(e) {
     const user = JSON.parse(e.currentTarget.dataset.user);
     const form = document.getElementById('user-form');
     form.reset();
-    document.getElementById('user-form-title').textContent = 'Edit Data User';
+    document.getElementById('user-form-title').innerHTML = '<i class="ph-duotone ph-pencil-simple text-indigo-500 mr-2"></i>Edit Data User';
     document.getElementById('original-email').value = user.email;
     document.getElementById('user-nama').value = user.nama;
     document.getElementById('user-email').value = user.email;
@@ -1917,7 +1946,6 @@ async function handleViewCutiDocClick(e) {
     } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
 }
 
-// --- UTILITY FUNCTIONS ---
 function showLoader(text = 'Loading...') {
     const txt = document.getElementById('loader-text');
     if(txt) txt.textContent = text;
@@ -1938,28 +1966,28 @@ function showNotification(type, title, message, onConfirm = null) {
     document.getElementById('notification-title').textContent = title;
     document.getElementById('notification-message').textContent = message;
     
-    // Modern styling for icon
     const typeMap = {
-        success: { class: 'bg-emerald-100 text-emerald-600', icon: 'fa-check' },
-        error: { class: 'bg-rose-100 text-rose-600', icon: 'fa-times' },
-        warning: { class: 'bg-amber-100 text-amber-600', icon: 'fa-exclamation' }
+        success: { class: 'bg-emerald-100 text-emerald-600', icon: 'ph-check' },
+        error: { class: 'bg-rose-100 text-rose-600', icon: 'ph-warning-octagon' },
+        warning: { class: 'bg-amber-100 text-amber-600', icon: 'ph-warning' },
+        info: { class: 'bg-indigo-100 text-indigo-600', icon: 'ph-info' }
     };
-    const style = typeMap[type] || { class: 'bg-indigo-100 text-indigo-600', icon: 'fa-info' };
+    const style = typeMap[type] || typeMap.info;
     
-    iconEl.className = `mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 text-3xl ${style.class}`;
-    iconEl.innerHTML = `<i class="fas ${style.icon}"></i>`;
+    iconEl.className = `mx-auto flex items-center justify-center h-20 w-20 rounded-full mb-6 text-4xl shadow-inner ${style.class}`;
+    iconEl.innerHTML = `<i class="ph-bold ${style.icon}"></i>`;
     
     if (typeof onConfirm === 'function') {
         buttonsContainer.innerHTML = `
             <div class="flex gap-3">
-                <button id="confirm-cancel" class="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium">Batal</button>
-                <button id="confirm-ok" class="flex-1 rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 font-medium shadow-lg shadow-indigo-500/30">Ya</button>
+                <button id="confirm-cancel" class="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-700 hover:bg-slate-50 font-bold transition-colors">Batal</button>
+                <button id="confirm-ok" class="flex-1 rounded-2xl bg-indigo-600 px-4 py-3 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-500/20 transition-colors">Ya</button>
             </div>
         `;
         document.getElementById('confirm-ok').onclick = onConfirm;
         document.getElementById('confirm-cancel').onclick = hideNotification;
     } else {
-        buttonsContainer.innerHTML = `<button id="notification-close-btn" class="w-full rounded-xl bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 font-medium shadow-md">Tutup</button>`;
+        buttonsContainer.innerHTML = `<button id="notification-close-btn" class="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02]">Tutup</button>`;
         document.getElementById('notification-close-btn').onclick = hideNotification;
     }
     modal.classList.remove('hidden');
@@ -1974,8 +2002,6 @@ function hideNotification() {
 }
 
 function applyTheme(theme) {
-    // We handle theme primarily through CSS variables in <style> tag
-    // This updates the JS variables if needed for charts
     const colors = {
         blue: '#4f46e5',
         green: '#10b981',
