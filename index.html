@@ -637,7 +637,7 @@ let officeLocations = [];
 let rolePermissions = [];
 let selectedOffice = null;
 let attendanceData = [];
-let currentReportData = []; // Variabel baru untuk menyimpan data laporan aktif
+let currentReportData = []; // Variabel untuk menyimpan data laporan yang sedang tampil
 let map = null;
 let employeeMap = null;
 let attendanceChart = null;
@@ -1002,6 +1002,7 @@ async function captureSelfie() {
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
+    // Ambil raw base64
     const base64Photo = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
     hideSelfieModal();
     
@@ -1012,7 +1013,7 @@ async function captureSelfie() {
                 user: currentUser,
                 status: attendanceInfo.status,
                 location: attendanceInfo.location,
-                photo: base64Photo,
+                photo: base64Photo, // Dikirim sebagai 'photo'
                 officeLocation: selectedOffice.nama
             },
         });
@@ -1031,29 +1032,71 @@ async function captureSelfie() {
     }
 }
 
-// Function to handle image preview safely using index
+// === FUNGSI PREVIEW FOTO YANG DIPERBAIKI ===
+
 window.previewImageFromIndex = function(index) {
-    const item = currentReportData[index];
-    if (item) {
-        showImagePreview(item.foto_url, item.nama);
+    // Debugging: Cek data di console
+    console.log("Mencoba preview index:", index);
+    
+    if (!currentReportData || !currentReportData[index]) {
+        console.error("Data tidak ditemukan pada index tersebut.");
+        showNotification('error', 'Error Data', 'Data foto tidak ditemukan di memori browser. Silakan refresh halaman.');
+        return;
     }
+
+    const item = currentReportData[index];
+    console.log("Data Item:", item);
+
+    // Coba berbagai kemungkinan nama field dari backend
+    // Backend mungkin mengirim 'foto_url', 'foto', 'photo', 'image', atau 'file'
+    let rawUrl = item.foto_url || item.foto || item.photo || item.image || item.file;
+
+    if (!rawUrl) {
+        console.warn("Field foto kosong pada item ini.");
+        showNotification('warning', 'Tidak Ada Foto', 'Data ini tercatat tanpa lampiran foto.');
+        return;
+    }
+
+    showImagePreview(rawUrl, item.nama);
 };
 
-// Function to handle image preview
 window.showImagePreview = function(url, nama) {
     if(!url || url === 'undefined' || url === '') {
         showNotification('warning', 'Tidak Ada Foto', 'Data ini tidak memiliki lampiran foto.');
         return;
     }
     
-    // Perbaikan: Cek dan tambahkan prefix base64 jika belum ada
-    let imageSrc = url;
-    if (!url.startsWith('http') && !url.startsWith('data:image')) {
-        imageSrc = `data:image/jpeg;base64,${url}`;
+    let imageSrc = url.trim();
+    
+    // Logika deteksi format gambar yang lebih kuat
+    const isUrl = imageSrc.startsWith('http');
+    const isDataUri = imageSrc.startsWith('data:image');
+    
+    if (!isUrl && !isDataUri) {
+        // Jika bukan URL dan bukan Data URI lengkap, asumsikan ini Raw Base64 JPEG
+        // Kita tambahkan header data URI manual
+        imageSrc = `data:image/jpeg;base64,${imageSrc}`;
     }
 
     const modal = document.getElementById('image-preview-modal');
     const img = document.getElementById('preview-image-element');
+    
+    // Reset source untuk menghindari gambar lama berkedip
+    img.src = '';
+    img.style.display = 'none'; // Sembunyikan dulu sampai load
+    
+    // Event listener jika gambar berhasil dimuat
+    img.onload = function() {
+        img.style.display = 'block';
+    };
+    
+    // Event listener jika gambar rusak/gagal
+    img.onerror = function() {
+        console.error("Gagal memuat gambar. Source:", imageSrc.substring(0, 50) + "...");
+        showNotification('error', 'Gagal Memuat Foto', 'Format foto rusak atau tidak didukung.');
+        modal.classList.add('hidden');
+    };
+
     img.src = imageSrc;
     modal.classList.remove('hidden');
 };
@@ -1491,6 +1534,10 @@ async function loadAttendanceDataView() {
     try {
         const allAttendance = await apiCall({ action: 'getDashboardData', user: currentUser });
         let filteredData = [...allAttendance].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        // Simpan data awal ke variabel global report
+        currentReportData = filteredData;
+
         const today = new Date().toISOString().split('T')[0];
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
         
@@ -1528,13 +1575,17 @@ async function loadAttendanceDataView() {
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(document.getElementById('end-date-filter').value);
             endDate.setHours(23, 59, 59, 999);
+            
+            // Filter data
             filteredData = allAttendance.filter(item => {
                 const itemDate = new Date(item.timestamp);
                 return itemDate >= startDate && itemDate <= endDate;
             }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            // Simpan data yang difilter ke variabel global agar bisa diakses fungsi preview
+            // PENTING: Update variabel global currentReportData agar sinkron dengan tabel yang tampil
+            // Ini memastikan index tombol "Lihat" cocok dengan array data
             currentReportData = filteredData;
+            console.log("Tabel dirender ulang. Jumlah data:", currentReportData.length);
 
             const tableBody = document.getElementById('attendance-report-body');
             tableBody.innerHTML = filteredData.length === 0 ? '<tr><td colspan="5" class="text-center py-12 text-slate-400"><i class="ph ph-folder-dashed text-4xl mb-2 block mx-auto"></i>Tidak ada data pada rentang tanggal ini.</td></tr>' :
@@ -1549,8 +1600,8 @@ async function loadAttendanceDataView() {
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <button onclick="previewImageFromIndex(${index})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-indigo-100 flex items-center gap-1">
-                                <i class="ph-bold ph-image"></i> Lihat
+                            <button type="button" onclick="previewImageFromIndex(${index})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-indigo-100 flex items-center gap-1 group">
+                                <i class="ph-bold ph-image group-hover:scale-110 transition-transform"></i> Lihat
                             </button>
                         </td>
                     </tr>`).join('');
