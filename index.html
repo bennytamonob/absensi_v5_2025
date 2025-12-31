@@ -22,6 +22,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
+    <!-- TensorFlow.js & BlazeFace (Untuk Deteksi Wajah) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -139,6 +143,17 @@
         @keyframes fadeIn { 
             from { opacity: 0; transform: translateY(15px); filter: blur(2px); } 
             to { opacity: 1; transform: translateY(0); filter: blur(0); } 
+        }
+        
+        /* Face Scan Animation */
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+            animation: scan 2s linear infinite;
         }
         
         /* Custom Loader */
@@ -503,11 +518,11 @@
         </div>
     </div>
 
-    <!-- Selfie Modal -->
+    <!-- Selfie Modal with Face Detection UI -->
     <div id="selfie-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[1001] p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh] border border-slate-200">
             <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-camera mr-2 text-indigo-500"></i>Verifikasi Foto</h3>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center"><i class="ph-duotone ph-face-mask mr-2 text-indigo-500"></i>Deteksi Wajah & Absen</h3>
                 <button onclick="document.getElementById('selfie-modal').classList.add('hidden')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="ph-bold ph-x text-lg"></i>
                 </button>
@@ -515,18 +530,24 @@
             <div class="p-0 relative bg-black flex-grow flex items-center justify-center group overflow-hidden">
                 <video id="video-preview" class="w-full h-full object-cover transform scale-x-[-1]" autoplay playsinline></video>
                 <canvas id="selfie-canvas" class="hidden"></canvas>
-                <!-- Camera Overlay UI -->
-                <div class="absolute inset-0 border-[40px] border-black/40 pointer-events-none rounded-none"></div>
-                <div class="absolute inset-0 border-2 border-white/40 m-10 rounded-2xl pointer-events-none border-dashed"></div>
-                <div class="absolute top-12 text-white/80 font-medium text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                    Pastikan wajah terlihat jelas
+                
+                <!-- Camera Overlay UI & Face Detection Indicators -->
+                <div class="absolute inset-0 border-[40px] border-black/40 pointer-events-none rounded-none transition-colors duration-300" id="face-frame"></div>
+                <div class="absolute inset-0 border-2 border-white/40 m-10 rounded-2xl pointer-events-none border-dashed flex items-center justify-center overflow-hidden">
+                    <!-- Scanner Animation Line -->
+                    <div id="face-scan-line" class="w-full h-1 bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,1)] absolute top-0 opacity-0 transition-opacity animate-scan"></div>
+                </div>
+                
+                <!-- Status Badge -->
+                <div id="face-status-badge" class="absolute top-12 left-1/2 -translate-x-1/2 text-white/90 font-bold text-sm bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-white/10">
+                    <i class="ph-bold ph-scan animate-pulse"></i> Mencari wajah...
                 </div>
             </div>
             <div class="p-6 bg-white border-t border-slate-100 flex gap-4">
                 <button id="cancel-capture-btn" class="flex-1 px-4 py-3.5 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors">
                     Batal
                 </button>
-                <button id="capture-btn" class="flex-1 px-4 py-3.5 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <button id="capture-btn" disabled class="flex-1 px-4 py-3.5 bg-indigo-600 text-white rounded-xl font-bold shadow-xl shadow-indigo-500/25 hover:bg-indigo-700 transition-all transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
                     <i class="ph-bold ph-aperture text-xl"></i> Ambil & Absen
                 </button>
             </div>
@@ -676,6 +697,10 @@ let employeeMap = null;
 let attendanceChart = null;
 let lastPosition = null;
 let clockInterval = null;
+
+// Variabel untuk Face Detection
+let faceModel = null;
+let isFaceDetectionRunning = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
@@ -831,6 +856,79 @@ function handleLogout() {
     window.location.reload();
 }
 
+// === FACE DETECTION FUNCTIONS ===
+
+async function loadFaceModel() {
+    if(!faceModel) {
+        console.log("Memuat model Face Detection...");
+        // Memuat model BlazeFace
+        try {
+            faceModel = await blazeface.load();
+            console.log("Model Face Detection Siap!");
+        } catch (error) {
+            console.error("Gagal memuat model wajah:", error);
+            showNotification('warning', 'Peringatan Sistem', 'Modul deteksi wajah gagal dimuat. Absensi mungkin tidak berjalan optimal.');
+        }
+    }
+}
+
+async function startFaceDetection(videoElement) {
+    if (!faceModel) await loadFaceModel();
+    isFaceDetectionRunning = true;
+    
+    const captureBtn = document.getElementById('capture-btn');
+    const statusBadge = document.getElementById('face-status-badge');
+    const scanLine = document.getElementById('face-scan-line');
+    const faceFrame = document.getElementById('face-frame');
+    
+    // Reset UI State
+    captureBtn.disabled = true;
+    captureBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+    statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white/90 font-bold text-sm bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-white/10';
+    statusBadge.innerHTML = '<i class="ph-bold ph-scan animate-pulse"></i> Mencari wajah...';
+    scanLine.style.opacity = '1';
+    faceFrame.classList.remove('border-emerald-500/50');
+    faceFrame.classList.add('border-black/40');
+
+    async function detectFrame() {
+        if (!isFaceDetectionRunning) return;
+
+        if (faceModel && videoElement.readyState === 4) {
+            try {
+                const predictions = await faceModel.estimateFaces(videoElement, false);
+
+                if (predictions.length > 0) {
+                    // Wajah Terdeteksi
+                    if (captureBtn.disabled) {
+                        captureBtn.disabled = false;
+                        statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-emerald-600/90 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/30';
+                        statusBadge.innerHTML = '<i class="ph-fill ph-check-circle"></i> Wajah Terdeteksi';
+                        scanLine.style.opacity = '0'; // Sembunyikan scan line
+                        faceFrame.classList.remove('border-black/40');
+                        faceFrame.classList.add('border-emerald-500/50');
+                    }
+                } else {
+                    // Wajah Hilang
+                    if (!captureBtn.disabled) {
+                        captureBtn.disabled = true;
+                        statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white/90 font-bold text-sm bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-white/10';
+                        statusBadge.innerHTML = '<i class="ph-bold ph-scan animate-pulse"></i> Mencari wajah...';
+                        scanLine.style.opacity = '1'; // Tampilkan scan line
+                        faceFrame.classList.add('border-black/40');
+                        faceFrame.classList.remove('border-emerald-500/50');
+                    }
+                }
+            } catch (err) {
+                console.error("Detection Error:", err);
+            }
+        }
+        
+        requestAnimationFrame(detectFrame);
+    }
+
+    detectFrame();
+}
+
 async function initDashboard() {
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('dashboard-page').classList.remove('hidden');
@@ -844,6 +942,9 @@ async function initDashboard() {
     updateTime();
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(updateTime, 1000);
+    
+    // Load Model Wajah di Background saat dashboard mulai
+    loadFaceModel();
     
     showLoader('Menyiapkan Dashboard...');
     try {
@@ -1011,6 +1112,12 @@ async function showSelfieModal(status, location) {
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         video.srcObject = videoStream;
+        
+        // Start Face Detection Loop
+        video.onloadeddata = () => {
+            startFaceDetection(video);
+        };
+        
     } catch (error) {
         showNotification('error', 'Kamera Error', 'Izin kamera ditolak atau perangkat tidak ditemukan.');
         hideSelfieModal();
@@ -1018,6 +1125,7 @@ async function showSelfieModal(status, location) {
 }
 
 function hideSelfieModal() {
+    isFaceDetectionRunning = false; // Stop detection loop
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
     }
