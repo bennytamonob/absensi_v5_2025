@@ -22,9 +22,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
-    <!-- TensorFlow.js & BlazeFace (Untuk Deteksi Wajah) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+    <!-- TensorFlow.js & BlazeFace (Fixed Versions for Stability) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -701,6 +701,7 @@ let clockInterval = null;
 // Variabel untuk Face Detection
 let faceModel = null;
 let isFaceDetectionRunning = false;
+let faceModelLoadAttempts = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
@@ -856,24 +857,68 @@ function handleLogout() {
     window.location.reload();
 }
 
-// === FACE DETECTION FUNCTIONS ===
+// === FACE DETECTION FUNCTIONS (IMPROVED STABILITY) ===
 
 async function loadFaceModel() {
-    if(!faceModel) {
-        console.log("Memuat model Face Detection...");
-        // Memuat model BlazeFace
+    if (faceModel) return; // Sudah dimuat
+
+    console.log("Memuat model Face Detection (Percobaan " + (faceModelLoadAttempts + 1) + ")...");
+    
+    try {
+        // Pastikan TF siap dulu
+        await tf.ready();
+        
+        // Coba set backend ke WebGL (Cepat)
         try {
-            faceModel = await blazeface.load();
-            console.log("Model Face Detection Siap!");
-        } catch (error) {
-            console.error("Gagal memuat model wajah:", error);
-            showNotification('warning', 'Peringatan Sistem', 'Modul deteksi wajah gagal dimuat. Absensi mungkin tidak berjalan optimal.');
+            await tf.setBackend('webgl');
+        } catch (e) {
+            console.warn("WebGL tidak tersedia, beralih ke CPU...");
+            await tf.setBackend('cpu');
+        }
+
+        // Load model
+        faceModel = await blazeface.load();
+        console.log("Model Face Detection Siap!");
+        
+    } catch (error) {
+        console.error("Gagal memuat model wajah:", error);
+        
+        faceModelLoadAttempts++;
+        if (faceModelLoadAttempts < 3) {
+            // Coba lagi setelah 2 detik jika gagal (Max 3x)
+            console.log("Mencoba memuat ulang model...");
+            setTimeout(loadFaceModel, 2000);
+        } else {
+            // Jika sudah 3x gagal, baru tampilkan error ke user dan fallback ke CPU jika belum
+            if (tf.getBackend() !== 'cpu') {
+                 console.log("Percobaan terakhir dengan CPU backend...");
+                 await tf.setBackend('cpu');
+                 faceModelLoadAttempts = 0; // Reset counter untuk mencoba mode CPU
+                 loadFaceModel();
+                 return;
+            }
+            
+            showNotification('warning', 'Peringatan Sistem', 'Modul deteksi wajah gagal dimuat. Pastikan koneksi internet stabil atau coba refresh halaman.');
         }
     }
 }
 
 async function startFaceDetection(videoElement) {
-    if (!faceModel) await loadFaceModel();
+    if (!faceModel) {
+        await loadFaceModel();
+        if (!faceModel) {
+             // Jika masih gagal juga, izinkan manual capture sebagai darurat?
+             // Sesuai request user: "tidak bisa sampai terdeteksi", jadi kita biarkan tombol disabled
+             // Tapi kita update status badge agar user tau
+             const statusBadge = document.getElementById('face-status-badge');
+             if(statusBadge) {
+                 statusBadge.innerHTML = '<i class="ph-bold ph-warning-circle text-red-400"></i> AI Gagal - Coba Refresh';
+                 statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-red-900/80 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-red-500/50';
+             }
+             return;
+        }
+    }
+    
     isFaceDetectionRunning = true;
     
     const captureBtn = document.getElementById('capture-btn');
@@ -886,7 +931,7 @@ async function startFaceDetection(videoElement) {
     captureBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
     statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white/90 font-bold text-sm bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-white/10';
     statusBadge.innerHTML = '<i class="ph-bold ph-scan animate-pulse"></i> Mencari wajah...';
-    scanLine.style.opacity = '1';
+    if(scanLine) scanLine.style.opacity = '1';
     faceFrame.classList.remove('border-emerald-500/50');
     faceFrame.classList.add('border-black/40');
 
@@ -895,6 +940,7 @@ async function startFaceDetection(videoElement) {
 
         if (faceModel && videoElement.readyState === 4) {
             try {
+                // ReturnTensors: false agar tidak membebani memori (memory leak prevention)
                 const predictions = await faceModel.estimateFaces(videoElement, false);
 
                 if (predictions.length > 0) {
@@ -903,7 +949,7 @@ async function startFaceDetection(videoElement) {
                         captureBtn.disabled = false;
                         statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-emerald-600/90 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/30';
                         statusBadge.innerHTML = '<i class="ph-fill ph-check-circle"></i> Wajah Terdeteksi';
-                        scanLine.style.opacity = '0'; // Sembunyikan scan line
+                        if(scanLine) scanLine.style.opacity = '0'; // Sembunyikan scan line
                         faceFrame.classList.remove('border-black/40');
                         faceFrame.classList.add('border-emerald-500/50');
                     }
@@ -913,7 +959,7 @@ async function startFaceDetection(videoElement) {
                         captureBtn.disabled = true;
                         statusBadge.className = 'absolute top-12 left-1/2 -translate-x-1/2 text-white/90 font-bold text-sm bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm flex items-center gap-2 transition-all border border-white/10';
                         statusBadge.innerHTML = '<i class="ph-bold ph-scan animate-pulse"></i> Mencari wajah...';
-                        scanLine.style.opacity = '1'; // Tampilkan scan line
+                        if(scanLine) scanLine.style.opacity = '1'; // Tampilkan scan line
                         faceFrame.classList.add('border-black/40');
                         faceFrame.classList.remove('border-emerald-500/50');
                     }
