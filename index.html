@@ -998,12 +998,21 @@ async function captureSelfie() {
     const video = document.getElementById('video-preview');
     const canvas = document.getElementById('selfie-canvas');
     const context = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    
+    // === PERBAIKAN: Resize & Kompresi Gambar ===
+    // Mengurangi resolusi agar ringan dikirim ke server (menghindari error data terlalu besar)
+    const MAX_WIDTH = 600;
+    const scale = MAX_WIDTH / video.videoWidth;
+    // Jika video lebih lebar dari 600px, kita kecilkan. Jika tidak, pakai ukuran asli.
+    const finalScale = scale < 1 ? scale : 1;
+    
+    canvas.width = video.videoWidth * finalScale;
+    canvas.height = video.videoHeight * finalScale;
+    
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // Ambil raw base64
-    const base64Photo = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+    // Ambil raw base64 dengan kualitas 0.7 (70%) untuk menghemat bandwidth
+    const base64Photo = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
     hideSelfieModal();
     
     try {
@@ -1067,11 +1076,21 @@ window.showImagePreview = function(url, nama) {
     
     let imageSrc = String(url).trim();
     
-    // 1. Handling Link Google Drive (Konversi ke Direct View Link)
+    // 1. Handling Link Google Drive (Support berbagai format link)
     if (imageSrc.includes('drive.google.com')) {
-        const idMatch = imageSrc.match(/\/d\/(.*?)\//);
-        if (idMatch && idMatch[1]) {
-            imageSrc = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        let fileId = null;
+        // Coba pola /d/FILEID/
+        const match1 = imageSrc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match1) fileId = match1[1];
+        
+        // Coba pola id=FILEID
+        if (!fileId) {
+            const match2 = imageSrc.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match2) fileId = match2[1];
+        }
+
+        if (fileId) {
+            imageSrc = `https://drive.google.com/uc?export=view&id=${fileId}`;
         }
     } 
     // 2. Handling Base64 (Pembersihan & Prefix)
