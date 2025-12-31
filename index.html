@@ -1032,7 +1032,7 @@ async function captureSelfie() {
     }
 }
 
-// === FUNGSI PREVIEW FOTO YANG DIPERBAIKI ===
+// === FUNGSI PREVIEW FOTO YANG DIPERBAIKI (LEBIH ROBUST) ===
 
 window.previewImageFromIndex = function(index) {
     // Debugging: Cek data di console
@@ -1040,7 +1040,7 @@ window.previewImageFromIndex = function(index) {
     
     if (!currentReportData || !currentReportData[index]) {
         console.error("Data tidak ditemukan pada index tersebut.");
-        showNotification('error', 'Error Data', 'Data foto tidak ditemukan di memori browser. Silakan refresh halaman.');
+        showNotification('error', 'Error Data', 'Data foto tidak ditemukan. Mohon refresh halaman.');
         return;
     }
 
@@ -1048,7 +1048,6 @@ window.previewImageFromIndex = function(index) {
     console.log("Data Item:", item);
 
     // Coba berbagai kemungkinan nama field dari backend
-    // Backend mungkin mengirim 'foto_url', 'foto', 'photo', 'image', atau 'file'
     let rawUrl = item.foto_url || item.foto || item.photo || item.image || item.file;
 
     if (!rawUrl) {
@@ -1066,35 +1065,62 @@ window.showImagePreview = function(url, nama) {
         return;
     }
     
-    let imageSrc = url.trim();
+    let imageSrc = String(url).trim();
     
-    // Logika deteksi format gambar yang lebih kuat
-    const isUrl = imageSrc.startsWith('http');
-    const isDataUri = imageSrc.startsWith('data:image');
-    
-    if (!isUrl && !isDataUri) {
-        // Jika bukan URL dan bukan Data URI lengkap, asumsikan ini Raw Base64 JPEG
-        // Kita tambahkan header data URI manual
+    // 1. Handling Link Google Drive (Konversi ke Direct View Link)
+    if (imageSrc.includes('drive.google.com')) {
+        const idMatch = imageSrc.match(/\/d\/(.*?)\//);
+        if (idMatch && idMatch[1]) {
+            imageSrc = `https://drive.google.com/uc?export=view&id=${idMatch[1]}`;
+        }
+    } 
+    // 2. Handling Base64 (Pembersihan & Prefix)
+    else if (!imageSrc.startsWith('http')) {
+        // Hapus prefix jika ada (jaga-jaga double prefix) lalu bersihkan whitespace/newlines
+        imageSrc = imageSrc.replace(/^data:image\/[a-z]+;base64,/, '').replace(/\s/g, '');
+        // Tambahkan prefix standar
         imageSrc = `data:image/jpeg;base64,${imageSrc}`;
     }
 
     const modal = document.getElementById('image-preview-modal');
+    const imgWrapper = modal.querySelector('div.bg-white'); // Wrapper putih
     const img = document.getElementById('preview-image-element');
     
-    // Reset source untuk menghindari gambar lama berkedip
+    // Reset state gambar
     img.src = '';
-    img.style.display = 'none'; // Sembunyikan dulu sampai load
+    img.style.display = 'none'; 
+    img.style.opacity = '0';
     
-    // Event listener jika gambar berhasil dimuat
+    // Tambahkan indikator loading sementara
+    let loader = document.getElementById('preview-loader');
+    if(!loader) {
+        loader = document.createElement('div');
+        loader.id = 'preview-loader';
+        loader.className = 'absolute inset-0 flex items-center justify-center text-slate-400 font-bold';
+        loader.innerHTML = '<i class="ph ph-spinner animate-spin text-3xl mr-2"></i> Memuat...';
+        imgWrapper.appendChild(loader);
+    }
+    loader.style.display = 'flex';
+
+    // Event Listener: Berhasil
     img.onload = function() {
+        loader.style.display = 'none';
         img.style.display = 'block';
+        // Animasi fade-in halus
+        setTimeout(() => img.style.opacity = '1', 50);
     };
     
-    // Event listener jika gambar rusak/gagal
+    // Event Listener: Gagal
     img.onerror = function() {
-        console.error("Gagal memuat gambar. Source:", imageSrc.substring(0, 50) + "...");
-        showNotification('error', 'Gagal Memuat Foto', 'Format foto rusak atau tidak didukung.');
-        modal.classList.add('hidden');
+        loader.style.display = 'none';
+        console.error("Gagal memuat gambar. Source length:", imageSrc.length);
+        
+        // Tampilkan placeholder error
+        img.src = 'https://placehold.co/600x400/f1f5f9/94a3b8?text=Gagal+Memuat+Foto\n(Format+Rusak)';
+        img.style.display = 'block';
+        img.style.opacity = '1';
+        
+        showNotification('error', 'Gagal Memuat', 'Foto tidak dapat ditampilkan (File rusak atau link kadaluarsa).');
     };
 
     img.src = imageSrc;
