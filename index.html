@@ -637,6 +637,7 @@ let officeLocations = [];
 let rolePermissions = [];
 let selectedOffice = null;
 let attendanceData = [];
+let currentReportData = []; // Variabel baru untuk menyimpan data laporan aktif
 let map = null;
 let employeeMap = null;
 let attendanceChart = null;
@@ -1030,15 +1031,30 @@ async function captureSelfie() {
     }
 }
 
+// Function to handle image preview safely using index
+window.previewImageFromIndex = function(index) {
+    const item = currentReportData[index];
+    if (item) {
+        showImagePreview(item.foto_url, item.nama);
+    }
+};
+
 // Function to handle image preview
 window.showImagePreview = function(url, nama) {
     if(!url || url === 'undefined' || url === '') {
         showNotification('warning', 'Tidak Ada Foto', 'Data ini tidak memiliki lampiran foto.');
         return;
     }
+    
+    // Perbaikan: Cek dan tambahkan prefix base64 jika belum ada
+    let imageSrc = url;
+    if (!url.startsWith('http') && !url.startsWith('data:image')) {
+        imageSrc = `data:image/jpeg;base64,${url}`;
+    }
+
     const modal = document.getElementById('image-preview-modal');
     const img = document.getElementById('preview-image-element');
-    img.src = url;
+    img.src = imageSrc;
     modal.classList.remove('hidden');
 };
 
@@ -1517,9 +1533,12 @@ async function loadAttendanceDataView() {
                 return itemDate >= startDate && itemDate <= endDate;
             }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
+            // Simpan data yang difilter ke variabel global agar bisa diakses fungsi preview
+            currentReportData = filteredData;
+
             const tableBody = document.getElementById('attendance-report-body');
             tableBody.innerHTML = filteredData.length === 0 ? '<tr><td colspan="5" class="text-center py-12 text-slate-400"><i class="ph ph-folder-dashed text-4xl mb-2 block mx-auto"></i>Tidak ada data pada rentang tanggal ini.</td></tr>' :
-                filteredData.map(item => `
+                filteredData.map((item, index) => `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-500">${new Date(item.timestamp).toLocaleString('id-ID', { hour12: false })}</td>
                         <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-800">${item.nama}</td>
@@ -1530,7 +1549,7 @@ async function loadAttendanceDataView() {
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <button onclick="showImagePreview('${item.foto_url}', '${item.nama}')" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-indigo-100 flex items-center gap-1">
+                            <button onclick="previewImageFromIndex(${index})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-indigo-100 flex items-center gap-1">
                                 <i class="ph-bold ph-image"></i> Lihat
                             </button>
                         </td>
