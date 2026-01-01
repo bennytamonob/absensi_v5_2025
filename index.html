@@ -721,7 +721,8 @@
 //         APLIKASI ABSENSI - LOGIC (UPDATED FOR PHOSPHOR)           //
 // ================================================================= //
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw5spga5_1NQWfVaX6E1FnONS5fzq8lYwfDj9nIbBIfnsayiWzup_jiDdzTZpg-nDH5/exec';
+// IMPORTANT: IF YOU UPDATE BACKEND CODE, YOU MUST CREATE A NEW DEPLOYMENT VERSION!
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzOC_8LRfk8pCmSNaLbz32eOfZCpQQWMk3sxqbSo4m8-A8beUh-RjZMSjyGYkWxeNWa/exec';
 
 let currentUser = null;
 let appSettings = null;
@@ -2322,20 +2323,33 @@ async function loadLemburView() {
     }
 }
 
-// Helper to format weird sheet time values
+// Helper to format weird sheet time values (Updated for Robustness)
 function formatSheetTime(val) {
     if (!val) return '-';
-    // Handle "1899-12-30T..." format from Google Sheets
-    if (typeof val === 'string' && val.includes('1899-12-30T')) {
+    
+    // Handle standard "HH:mm" string
+    if (typeof val === 'string' && val.match(/^\d{1,2}:\d{2}$/)) {
+        return val;
+    }
+    
+    // Handle full verbose date string (e.g., "Sat Dec 30 1899...")
+    if (typeof val === 'string' && (val.includes('1899') || val.includes('GMT'))) {
         const date = new Date(val);
-        // Returns simple HH:mm string
-        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
     }
-    // Handle simple "HH:mm" string or other formats
-    if (typeof val === 'string' && val.match(/^\d{2}:\d{2}/)) {
-        return val.substring(0, 5);
+    
+    // Handle ISO string
+    if (typeof val === 'string' && val.includes('T')) {
+        const date = new Date(val);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
     }
-    return val;
+
+    // Return original if no format matches, but trim if it's too long
+    return String(val).substring(0, 5);
 }
 
 function renderLemburTable(data, isManagerView) {
@@ -2425,7 +2439,9 @@ async function handleLemburFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     
-    // Perbaikan: Menggunakan akses langsung ke elemen form agar lebih konsisten dengan handleCuti
+    // Debugging: Log data sebelum dikirim
+    console.log("Mengirim data lembur...");
+    
     const data = {
         user: currentUser,
         tanggalLembur: form.tanggalLembur.value,
@@ -2434,6 +2450,8 @@ async function handleLemburFormSubmit(e) {
         keterangan: form.keterangan.value,
         status: 'Pending' // Default status
     };
+    
+    console.log("Payload:", data);
     
     // Validasi sederhana
     if(!data.tanggalLembur || !data.jamMulai || !data.jamSelesai || !data.keterangan) {
@@ -2450,8 +2468,8 @@ async function handleLemburFormSubmit(e) {
     showLoader('Mengirim Pengajuan Lembur...');
     try {
         // Logika pengiriman ke backend
-        // PENTING: Backend Google Apps Script harus menangani case 'ajukanLembur'
-        await apiCall({ action: 'ajukanLembur', data });
+        const response = await apiCall({ action: 'ajukanLembur', data });
+        console.log("Server Response:", response);
         
         showNotification('success', 'Terkirim', 'Pengajuan lembur Anda sedang diproses.');
         document.getElementById('lembur-form-modal').classList.add('hidden');
@@ -2459,7 +2477,7 @@ async function handleLemburFormSubmit(e) {
     } catch(error) { 
         console.error("Gagal submit lembur:", error);
         // Pesan error lebih spesifik untuk membantu debugging
-        showNotification('error', 'Gagal Mengirim', 'Terjadi kesalahan. Pastikan Google Apps Script (Backend) sudah ditambahkan fungsi "ajukanLembur".'); 
+        showNotification('error', 'Gagal Mengirim', 'Terjadi kesalahan. Pastikan Anda sudah melakukan "Deploy New Version" di Google Apps Script.'); 
     } finally { 
         hideLoader(); 
     }
