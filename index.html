@@ -2245,7 +2245,8 @@ async function loadLemburView() {
                         <span class="text-slate-400 font-bold">-</span>
                         <input type="date" id="lembur-end-date" class="rounded-lg border-slate-300 text-sm font-medium">
                     </div>
-                    <!-- Export functionality would be similar to cuti -->
+                    <!-- Export placeholder -->
+                    <button disabled class="bg-slate-100 text-slate-400 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed"><i class="ph-bold ph-microsoft-excel-logo"></i> Excel</button>
                 </div>
                 <div id="laporan-lembur-container" class="overflow-x-auto"></div>
             </div>
@@ -2257,11 +2258,16 @@ async function loadLemburView() {
     });
 
     try {
-        // NOTE: Menggunakan mock data atau endpoint jika ada. 
-        // Jika backend belum support 'getDaftarLembur', bagian ini mungkin perlu disesuaikan.
-        // Untuk saat ini saya gunakan apiCall dengan action baru, 
-        // pastikan backend (GAS) menangani 'getDaftarLembur'.
-        const daftarLembur = await apiCall({ action: 'getDaftarLembur', user: currentUser }).catch(() => []);
+        // Coba ambil data, jika gagal (backend belum update), gunakan array kosong agar UI tidak crash
+        let daftarLembur = [];
+        try {
+            daftarLembur = await apiCall({ action: 'getDaftarLembur', user: currentUser });
+        } catch (e) {
+            console.warn("Backend belum mendukung getDaftarLembur, menggunakan data kosong.");
+        }
+        
+        if (!Array.isArray(daftarLembur)) daftarLembur = [];
+        
         daftarLembur.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
         
         const userLembur = daftarLembur.filter(c => c.email === currentUser.email);
@@ -2271,7 +2277,6 @@ async function loadLemburView() {
             let filteredData = [...daftarLembur];
             const renderLaporan = () => {
                 document.getElementById('laporan-lembur-container').innerHTML = renderLemburTable(filteredData, true);
-                // Tambahkan event listener untuk approval jika diperlukan
             };
             const filterLaporan = () => {
                 const startDate = document.getElementById('lembur-start-date').value;
@@ -2327,23 +2332,36 @@ function renderLemburTable(data, isManagerView) {
 async function handleLemburFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
+    
+    // Gunakan FormData untuk mengambil nilai dengan lebih aman dan konsisten
+    const formData = new FormData(form);
+    
     const data = {
         user: currentUser,
-        tanggalLembur: form.tanggalLembur.value,
-        jamMulai: form.jamMulai.value,
-        jamSelesai: form.jamSelesai.value,
-        keterangan: form.keterangan.value,
+        tanggalLembur: formData.get('tanggalLembur'),
+        jamMulai: formData.get('jamMulai'),
+        jamSelesai: formData.get('jamSelesai'),
+        keterangan: formData.get('keterangan'),
         status: 'Pending' // Default status
     };
     
+    // Validasi sederhana di sisi klien
+    if(!data.tanggalLembur || !data.jamMulai || !data.jamSelesai || !data.keterangan) {
+        showNotification('warning', 'Data Tidak Lengkap', 'Mohon lengkapi semua kolom isian.');
+        return;
+    }
+    
     showLoader('Mengirim Pengajuan Lembur...');
     try {
+        // Logika pengiriman
         await apiCall({ action: 'ajukanLembur', data });
         showNotification('success', 'Terkirim', 'Pengajuan lembur Anda sedang diproses.');
         document.getElementById('lembur-form-modal').classList.add('hidden');
         loadLemburView();
     } catch(error) { 
-        showNotification('error', 'Gagal', error.message); 
+        console.error("Gagal submit lembur:", error);
+        // Pesan error lebih jelas
+        showNotification('error', 'Gagal Mengirim', 'Terjadi kesalahan saat menghubungi server. Pastikan Google Apps Script sudah mendukung fitur "ajukanLembur".'); 
     } finally { 
         hideLoader(); 
     }
