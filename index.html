@@ -721,7 +721,7 @@
 //         APLIKASI ABSENSI - LOGIC (UPDATED FOR PHOSPHOR)           //
 // ================================================================= //
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxCRZlY9sLmnY2ew5_gUhXbb_LiPGh1y44rO-WfKVdcgyilC41XGYr8zKs__xyrkAx0/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbytU19e5vl__AdMhvSoA5k9A5LnsQGMlC9T7JOachMETZ7h1AFq6QyzFMD-A3RZuBlz/exec';
 
 let currentUser = null;
 let appSettings = null;
@@ -2277,6 +2277,8 @@ async function loadLemburView() {
             let filteredData = [...daftarLembur];
             const renderLaporan = () => {
                 document.getElementById('laporan-lembur-container').innerHTML = renderLemburTable(filteredData, true);
+                // Tambahkan event listener untuk tombol approval lembur
+                document.querySelectorAll('#laporan-lembur-container .update-lembur-status-btn').forEach(btn => btn.addEventListener('click', handleUpdateLemburStatusClick));
             };
             const filterLaporan = () => {
                 const startDate = document.getElementById('lembur-start-date').value;
@@ -2313,8 +2315,11 @@ function renderLemburTable(data, isManagerView) {
     table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</th>
                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jam</th>
                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Keterangan</th>
-                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-              </tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>`;
+    // Tambahkan kolom Aksi untuk Manager
+    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>`;
+    
+    table += `</tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
               
     data.forEach(c => {
         table += `<tr class="hover:bg-slate-50 transition-colors">`;
@@ -2322,11 +2327,47 @@ function renderLemburTable(data, isManagerView) {
         table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">${new Date(c.tanggalLembur).toLocaleDateString('id-ID')}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">${c.jamMulai} - ${c.jamSelesai}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-600">${c.keterangan}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
-                  </tr>`;
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>`;
+        
+        // Tombol Approval untuk Manager
+        if (isManagerView) {
+            table += `<td class="px-6 py-4 whitespace-nowrap font-medium flex items-center gap-2">`;
+            if (c.status === 'Pending') {
+                table += `<button data-id="${c.id}" data-nama="${c.nama}" data-status="Disetujui" class="update-lembur-status-btn text-emerald-500 hover:text-emerald-700 bg-emerald-50 p-1.5 rounded-lg transition-colors border border-emerald-100" title="Setujui"><i class="ph-bold ph-check text-lg"></i></button>
+                          <button data-id="${c.id}" data-nama="${c.nama}" data-status="Ditolak" class="update-lembur-status-btn text-rose-500 hover:text-rose-700 bg-rose-50 p-1.5 rounded-lg transition-colors border border-rose-100" title="Tolak"><i class="ph-bold ph-x text-lg"></i></button>`;
+            } else {
+                table += `<span class="text-slate-400 text-xs italic">Selesai</span>`;
+            }
+            table += `</td>`;
+        }
+        
+        table += `</tr>`;
     });
     table += `</tbody></table>`;
     return table;
+}
+
+// Fungsi baru untuk menghandle klik tombol approval lembur
+async function handleUpdateLemburStatusClick(e) {
+    const button = e.currentTarget; 
+    const lemburId = button.dataset.id;
+    const newStatus = button.dataset.status;
+    const userNama = button.dataset.nama;
+    
+    showConfirmation(`Konfirmasi ${newStatus}`, `Ubah status lembur ${userNama} menjadi ${newStatus}?`, async () => {
+        hideNotification();
+        showLoader('Updating...');
+        try {
+            // Pastikan backend memiliki action 'updateStatusLembur'
+            await apiCall({ action: 'updateStatusLembur', lemburId, newStatus, approverName: currentUser.nama });
+            showNotification('success', 'Berhasil', 'Status lembur diperbarui.');
+            loadLemburView();
+        } catch (error) { 
+            showNotification('error', 'Gagal', 'Gagal update status. Pastikan Backend mendukung fitur updateStatusLembur.'); 
+        } finally { 
+            hideLoader(); 
+        }
+    });
 }
 
 async function handleLemburFormSubmit(e) {
