@@ -285,6 +285,10 @@
                     <i class="ph ph-calendar-check text-xl mr-3 group-hover:text-white transition-colors"></i>
                     <span class="font-medium">Pengajuan Cuti</span>
                 </a>
+                <a href="#lembur" class="sidebar-item flex items-center px-4 py-3.5 rounded-xl group" data-view="lembur-view">
+                    <i class="ph ph-clock-afternoon text-xl mr-3 group-hover:text-white transition-colors"></i>
+                    <span class="font-medium">Pengajuan Lembur</span>
+                </a>
 
                 <div id="user-menu">
                     <div class="mt-8 px-4 mb-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Karyawan</div>
@@ -473,6 +477,7 @@
                 <div id="spoof-log-view" class="content-view fade-in hidden"></div>
                 <div id="employee-locations-view" class="content-view fade-in hidden"></div>
                 <div id="cuti-view" class="content-view fade-in hidden"></div>
+                <div id="lembur-view" class="content-view fade-in hidden"></div>
             </main>
         </div>
     </div>
@@ -647,7 +652,7 @@
     <!-- Cuti Form Modal -->
     <div id="cuti-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
         <div class="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full border border-slate-100">
-            <h3 id="cuti-form-title" class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="ph-duotone ph-calendar-plus text-indigo-500"></i>Form Pengajuan Cuti</h3>
+            <h3 id="cuti-form-title" class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">Form Pengajuan Cuti</h3>
             <form id="cuti-form" class="space-y-5">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Jenis Cuti</label>
@@ -674,6 +679,37 @@
                 </div>
                 <div class="pt-6 flex justify-end gap-3">
                     <button type="button" id="cancel-cuti-form-btn" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 font-bold transition-colors">Ajukan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lembur Form Modal (New) -->
+    <div id="lembur-form-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full border border-slate-100">
+            <h3 id="lembur-form-title" class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">Form Pengajuan Lembur</h3>
+            <form id="lembur-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Tanggal Lembur</label>
+                    <input type="date" id="lembur-tanggal" name="tanggalLembur" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Jam Mulai</label>
+                        <input type="time" id="lembur-mulai" name="jamMulai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Jam Selesai</label>
+                        <input type="time" id="lembur-selesai" name="jamSelesai" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Keterangan / Pekerjaan</label>
+                    <textarea id="lembur-keterangan" name="keterangan" rows="3" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" placeholder="Jelaskan pekerjaan lembur..."></textarea>
+                </div>
+                <div class="pt-6 flex justify-end gap-3">
+                    <button type="button" id="cancel-lembur-form-btn" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors">Batal</button>
                     <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 font-bold transition-colors">Ajukan</button>
                 </div>
             </form>
@@ -807,6 +843,10 @@ function setupEventListeners() {
     
     document.getElementById('cuti-form').addEventListener('submit', handleCutiFormSubmit);
     document.getElementById('cancel-cuti-form-btn').addEventListener('click', () => document.getElementById('cuti-form-modal').classList.add('hidden'));
+
+    // New Event Listeners for Lembur
+    document.getElementById('lembur-form').addEventListener('submit', handleLemburFormSubmit);
+    document.getElementById('cancel-lembur-form-btn').addEventListener('click', () => document.getElementById('lembur-form-modal').classList.add('hidden'));
 }
 
 async function apiCall(body) {
@@ -1423,6 +1463,7 @@ function showView(viewId) {
         case 'spoof-log-view': loadSpoofLogView(); break;
         case 'employee-locations-view': loadEmployeeLocationsView(); break;
         case 'cuti-view': loadCutiView(); break;
+        case 'lembur-view': loadLemburView(); break;
     }
 }
 
@@ -2172,6 +2213,139 @@ async function loadCutiView() {
         }
     } catch(error) {
         // Handle error
+    }
+}
+
+// === NEW LEMBUR FUNCTIONS ===
+
+async function loadLemburView() {
+    const view = document.getElementById('lembur-view');
+    view.innerHTML = `<div class="modern-card p-12 flex flex-col items-center justify-center text-slate-500 min-h-[400px]"><i class="ph-duotone ph-spinner-gap ph-spin text-4xl text-indigo-500 mb-3"></i><span class="font-medium">Memuat data lembur...</span></div>`;
+    const isManager = currentUser.role === 'Admin' || currentUser.role === 'HR';
+
+    view.innerHTML = `
+        <div class="space-y-6">
+            <!-- User's Lembur Card -->
+            <div class="modern-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="ph-duotone ph-clock-afternoon text-indigo-500"></i> Lembur Saya</h2>
+                    <button id="create-lembur-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center gap-2"><i class="ph-bold ph-plus"></i> Ajukan Lembur</button>
+                </div>
+                <div id="status-lembur-container" class="overflow-x-auto"></div>
+            </div>
+            
+            <!-- Manager View -->
+            <div id="laporan-lembur-wrapper" class="${isManager ? '' : 'hidden'} modern-card p-6">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="ph-duotone ph-user-list text-indigo-500"></i> Approval & Laporan (HR/Admin)</h3>
+                
+                <div class="flex flex-wrap gap-4 items-center mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-500">Periode:</span>
+                        <input type="date" id="lembur-start-date" class="rounded-lg border-slate-300 text-sm font-medium">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="date" id="lembur-end-date" class="rounded-lg border-slate-300 text-sm font-medium">
+                    </div>
+                    <!-- Export functionality would be similar to cuti -->
+                </div>
+                <div id="laporan-lembur-container" class="overflow-x-auto"></div>
+            </div>
+        </div>`;
+    
+    document.getElementById('create-lembur-btn').addEventListener('click', () => {
+        document.getElementById('lembur-form').reset();
+        document.getElementById('lembur-form-modal').classList.remove('hidden');
+    });
+
+    try {
+        // NOTE: Menggunakan mock data atau endpoint jika ada. 
+        // Jika backend belum support 'getDaftarLembur', bagian ini mungkin perlu disesuaikan.
+        // Untuk saat ini saya gunakan apiCall dengan action baru, 
+        // pastikan backend (GAS) menangani 'getDaftarLembur'.
+        const daftarLembur = await apiCall({ action: 'getDaftarLembur', user: currentUser }).catch(() => []);
+        daftarLembur.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        const userLembur = daftarLembur.filter(c => c.email === currentUser.email);
+        document.getElementById('status-lembur-container').innerHTML = renderLemburTable(userLembur, false);
+
+        if (isManager) {
+            let filteredData = [...daftarLembur];
+            const renderLaporan = () => {
+                document.getElementById('laporan-lembur-container').innerHTML = renderLemburTable(filteredData, true);
+                // Tambahkan event listener untuk approval jika diperlukan
+            };
+            const filterLaporan = () => {
+                const startDate = document.getElementById('lembur-start-date').value;
+                const endDate = document.getElementById('lembur-end-date').value;
+                filteredData = daftarLembur.filter(c => {
+                    let valid = true;
+                    if (startDate && new Date(c.tanggalLembur) < new Date(startDate)) valid = false;
+                    if (endDate && new Date(c.tanggalLembur) > new Date(endDate)) valid = false;
+                    return valid;
+                });
+                renderLaporan();
+            };
+            document.getElementById('lembur-start-date').addEventListener('change', filterLaporan);
+            document.getElementById('lembur-end-date').addEventListener('change', filterLaporan);
+            renderLaporan();
+        }
+    } catch(error) {
+        console.error("Error loading lembur data", error);
+        document.getElementById('status-lembur-container').innerHTML = '<div class="text-center py-4 text-slate-400">Gagal memuat data.</div>';
+    }
+}
+
+function renderLemburTable(data, isManagerView) {
+    if (!data || data.length === 0) return '<div class="text-center py-10 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200"><i class="ph ph-clock-slash text-3xl mb-2 block mx-auto"></i>Belum ada pengajuan lembur.</div>';
+    
+    const statusColor = {
+        'Pending': 'bg-amber-100 text-amber-700 border-amber-200',
+        'Disetujui': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'Ditolak': 'bg-rose-100 text-rose-700 border-rose-200',
+    };
+    
+    let table = `<table class="min-w-full divide-y divide-slate-100"><thead class="bg-slate-50"><tr>`;
+    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Karyawan</th>`;
+    table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jam</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Keterangan</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+              </tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
+              
+    data.forEach(c => {
+        table += `<tr class="hover:bg-slate-50 transition-colors">`;
+        if (isManagerView) table += `<td class="px-6 py-4 whitespace-nowrap font-bold text-slate-800">${c.nama}</td>`;
+        table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">${new Date(c.tanggalLembur).toLocaleDateString('id-ID')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">${c.jamMulai} - ${c.jamSelesai}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-600">${c.keterangan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
+                  </tr>`;
+    });
+    table += `</tbody></table>`;
+    return table;
+}
+
+async function handleLemburFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        user: currentUser,
+        tanggalLembur: form.tanggalLembur.value,
+        jamMulai: form.jamMulai.value,
+        jamSelesai: form.jamSelesai.value,
+        keterangan: form.keterangan.value,
+        status: 'Pending' // Default status
+    };
+    
+    showLoader('Mengirim Pengajuan Lembur...');
+    try {
+        await apiCall({ action: 'ajukanLembur', data });
+        showNotification('success', 'Terkirim', 'Pengajuan lembur Anda sedang diproses.');
+        document.getElementById('lembur-form-modal').classList.add('hidden');
+        loadLemburView();
+    } catch(error) { 
+        showNotification('error', 'Gagal', error.message); 
+    } finally { 
+        hideLoader(); 
     }
 }
 
