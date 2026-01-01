@@ -2245,8 +2245,8 @@ async function loadLemburView() {
                         <span class="text-slate-400 font-bold">-</span>
                         <input type="date" id="lembur-end-date" class="rounded-lg border-slate-300 text-sm font-medium">
                     </div>
-                    <!-- Export placeholder -->
-                    <button disabled class="bg-slate-100 text-slate-400 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 cursor-not-allowed"><i class="ph-bold ph-microsoft-excel-logo"></i> Excel</button>
+                    <!-- Enabled Export Button -->
+                    <button id="download-lembur-excel-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"><i class="ph-bold ph-microsoft-excel-logo"></i> Excel</button>
                 </div>
                 <div id="laporan-lembur-container" class="overflow-x-auto"></div>
             </div>
@@ -2258,7 +2258,6 @@ async function loadLemburView() {
     });
 
     try {
-        // Coba ambil data, jika gagal (backend belum update), gunakan array kosong agar UI tidak crash
         let daftarLembur = [];
         try {
             daftarLembur = await apiCall({ action: 'getDaftarLembur', user: currentUser });
@@ -2272,6 +2271,8 @@ async function loadLemburView() {
         
         const userLembur = daftarLembur.filter(c => c.email === currentUser.email);
         document.getElementById('status-lembur-container').innerHTML = renderLemburTable(userLembur, false);
+        // Add PDF listener for user table
+        document.querySelectorAll('#status-lembur-container .view-lembur-doc-btn').forEach(btn => btn.addEventListener('click', handleViewLemburDocClick));
 
         if (isManager) {
             let filteredData = [...daftarLembur];
@@ -2279,6 +2280,8 @@ async function loadLemburView() {
                 document.getElementById('laporan-lembur-container').innerHTML = renderLemburTable(filteredData, true);
                 // Tambahkan event listener untuk tombol approval lembur
                 document.querySelectorAll('#laporan-lembur-container .update-lembur-status-btn').forEach(btn => btn.addEventListener('click', handleUpdateLemburStatusClick));
+                // Add PDF listener for manager table
+                document.querySelectorAll('#laporan-lembur-container .view-lembur-doc-btn').forEach(btn => btn.addEventListener('click', handleViewLemburDocClick));
             };
             const filterLaporan = () => {
                 const startDate = document.getElementById('lembur-start-date').value;
@@ -2293,12 +2296,40 @@ async function loadLemburView() {
             };
             document.getElementById('lembur-start-date').addEventListener('change', filterLaporan);
             document.getElementById('lembur-end-date').addEventListener('change', filterLaporan);
+            
+            // Excel Download Listener
+            document.getElementById('download-lembur-excel-btn').addEventListener('click', async () => {
+                if (filteredData.length === 0) return showNotification('warning', 'Info', 'Tidak ada data.');
+                showLoader('Exporting...');
+                try {
+                    // Requires backend support for 'downloadLaporanLembur'
+                    const result = await apiCall({ action: 'downloadLaporanLembur', data: { lemburData: filteredData } });
+                    if (result.downloadUrl) window.open(result.downloadUrl);
+                } catch (error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+            });
+            
             renderLaporan();
         }
     } catch(error) {
         console.error("Error loading lembur data", error);
         document.getElementById('status-lembur-container').innerHTML = '<div class="text-center py-4 text-slate-400">Gagal memuat data.</div>';
     }
+}
+
+// Helper to format weird sheet time values
+function formatSheetTime(val) {
+    if (!val) return '-';
+    // Handle "1899-12-30T..." format from Google Sheets
+    if (typeof val === 'string' && val.includes('1899-12-30T')) {
+        const date = new Date(val);
+        // Returns simple HH:mm string
+        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    // Handle simple "HH:mm" string or other formats
+    if (typeof val === 'string' && val.match(/^\d{2}:\d{2}/)) {
+        return val.substring(0, 5);
+    }
+    return val;
 }
 
 function renderLemburTable(data, isManagerView) {
@@ -2315,9 +2346,8 @@ function renderLemburTable(data, isManagerView) {
     table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</th>
                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jam</th>
                 <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Keterangan</th>
-                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>`;
-    // Tambahkan kolom Aksi untuk Manager
-    if (isManagerView) table += `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>`;
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>`; // Aksi column always present for PDF button
     
     table += `</tr></thead><tbody class="bg-white divide-y divide-slate-100 text-sm">`;
               
@@ -2325,23 +2355,20 @@ function renderLemburTable(data, isManagerView) {
         table += `<tr class="hover:bg-slate-50 transition-colors">`;
         if (isManagerView) table += `<td class="px-6 py-4 whitespace-nowrap font-bold text-slate-800">${c.nama}</td>`;
         table += `<td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">${new Date(c.tanggalLembur).toLocaleDateString('id-ID')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">${c.jamMulai} - ${c.jamSelesai}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">${formatSheetTime(c.jamMulai)} - ${formatSheetTime(c.jamSelesai)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-slate-600">${c.keterangan}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>`;
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full border ${statusColor[c.status] || 'bg-gray-100'}">${c.status}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium flex items-center gap-2">
+                        <button data-id="${c.id}" class="view-lembur-doc-btn text-slate-400 hover:text-indigo-600 bg-slate-50 p-1.5 rounded-lg transition-colors" title="Lihat Dokumen PDF"><i class="ph-bold ph-file-pdf text-lg"></i></button>`;
         
         // Tombol Approval untuk Manager
         if (isManagerView) {
-            table += `<td class="px-6 py-4 whitespace-nowrap font-medium flex items-center gap-2">`;
             if (c.status === 'Pending') {
                 table += `<button data-id="${c.id}" data-nama="${c.nama}" data-status="Disetujui" class="update-lembur-status-btn text-emerald-500 hover:text-emerald-700 bg-emerald-50 p-1.5 rounded-lg transition-colors border border-emerald-100" title="Setujui"><i class="ph-bold ph-check text-lg"></i></button>
                           <button data-id="${c.id}" data-nama="${c.nama}" data-status="Ditolak" class="update-lembur-status-btn text-rose-500 hover:text-rose-700 bg-rose-50 p-1.5 rounded-lg transition-colors border border-rose-100" title="Tolak"><i class="ph-bold ph-x text-lg"></i></button>`;
-            } else {
-                table += `<span class="text-slate-400 text-xs italic">Selesai</span>`;
             }
-            table += `</td>`;
         }
-        
-        table += `</tr>`;
+        table += `</td></tr>`;
     });
     table += `</tbody></table>`;
     return table;
@@ -2368,6 +2395,18 @@ async function handleUpdateLemburStatusClick(e) {
             hideLoader(); 
         }
     });
+}
+
+// Fungsi Handler View PDF Lembur
+async function handleViewLemburDocClick(e) {
+    const lemburId = e.currentTarget.dataset.id;
+    showLoader('Membuat PDF...');
+    try {
+        // Backend harus support 'downloadDokumenLembur'
+        const result = await apiCall({ action: 'downloadDokumenLembur', data: { lemburId, settings: appSettings } });
+        if (result.base64) openPdfFromBase64(result.base64, result.filename);
+        else throw new Error('File rusak atau tidak ditemukan.');
+    } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
 }
 
 async function handleLemburFormSubmit(e) {
