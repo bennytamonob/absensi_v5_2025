@@ -721,7 +721,7 @@
 //         APLIKASI ABSENSI - LOGIC (UPDATED FOR PHOSPHOR)           //
 // ================================================================= //
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbytU19e5vl__AdMhvSoA5k9A5LnsQGMlC9T7JOachMETZ7h1AFq6QyzFMD-A3RZuBlz/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw5spga5_1NQWfVaX6E1FnONS5fzq8lYwfDj9nIbBIfnsayiWzup_jiDdzTZpg-nDH5/exec';
 
 let currentUser = null;
 let appSettings = null;
@@ -2305,7 +2305,13 @@ async function loadLemburView() {
                     // Requires backend support for 'downloadLaporanLembur'
                     const result = await apiCall({ action: 'downloadLaporanLembur', data: { lemburData: filteredData } });
                     if (result.downloadUrl) window.open(result.downloadUrl);
-                } catch (error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+                } catch (error) { 
+                    if(error.message.includes('tidak valid') || error.message.includes('valid action')) {
+                        showNotification('error', 'Backend Outdated', 'Script Google Apps belum diupdate dengan fungsi downloadLaporanLembur.');
+                    } else {
+                        showNotification('error', 'Gagal', error.message); 
+                    }
+                } finally { hideLoader(); }
             });
             
             renderLaporan();
@@ -2406,7 +2412,13 @@ async function handleViewLemburDocClick(e) {
         const result = await apiCall({ action: 'downloadDokumenLembur', data: { lemburId, settings: appSettings } });
         if (result.base64) openPdfFromBase64(result.base64, result.filename);
         else throw new Error('File rusak atau tidak ditemukan.');
-    } catch(error) { showNotification('error', 'Gagal', error.message); } finally { hideLoader(); }
+    } catch(error) { 
+        if(error.message.includes('tidak valid') || error.message.includes('valid action')) {
+            showNotification('error', 'Backend Outdated', 'Script Google Apps belum diupdate dengan fungsi downloadDokumenLembur.');
+        } else {
+            showNotification('error', 'Gagal', error.message); 
+        }
+    } finally { hideLoader(); }
 }
 
 async function handleLemburFormSubmit(e) {
