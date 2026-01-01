@@ -721,7 +721,7 @@
 //         APLIKASI ABSENSI - LOGIC (UPDATED FOR PHOSPHOR)           //
 // ================================================================= //
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzVCKHZfUnORpoBlh8njCahGDvXbsouO1y2OwnVaDS2rRDx-nBR4v-TMWPMt3Avaxyz/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxCRZlY9sLmnY2ew5_gUhXbb_LiPGh1y44rO-WfKVdcgyilC41XGYr8zKs__xyrkAx0/exec';
 
 let currentUser = null;
 let appSettings = null;
@@ -2333,35 +2333,41 @@ async function handleLemburFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     
-    // Gunakan FormData untuk mengambil nilai dengan lebih aman dan konsisten
-    const formData = new FormData(form);
-    
+    // Perbaikan: Menggunakan akses langsung ke elemen form agar lebih konsisten dengan handleCuti
     const data = {
         user: currentUser,
-        tanggalLembur: formData.get('tanggalLembur'),
-        jamMulai: formData.get('jamMulai'),
-        jamSelesai: formData.get('jamSelesai'),
-        keterangan: formData.get('keterangan'),
+        tanggalLembur: form.tanggalLembur.value,
+        jamMulai: form.jamMulai.value,
+        jamSelesai: form.jamSelesai.value,
+        keterangan: form.keterangan.value,
         status: 'Pending' // Default status
     };
     
-    // Validasi sederhana di sisi klien
+    // Validasi sederhana
     if(!data.tanggalLembur || !data.jamMulai || !data.jamSelesai || !data.keterangan) {
         showNotification('warning', 'Data Tidak Lengkap', 'Mohon lengkapi semua kolom isian.');
+        return;
+    }
+
+    // Validasi Jam
+    if (data.jamSelesai <= data.jamMulai) {
+        showNotification('warning', 'Jam Invalid', 'Jam selesai harus lebih besar dari jam mulai.');
         return;
     }
     
     showLoader('Mengirim Pengajuan Lembur...');
     try {
-        // Logika pengiriman
+        // Logika pengiriman ke backend
+        // PENTING: Backend Google Apps Script harus menangani case 'ajukanLembur'
         await apiCall({ action: 'ajukanLembur', data });
+        
         showNotification('success', 'Terkirim', 'Pengajuan lembur Anda sedang diproses.');
         document.getElementById('lembur-form-modal').classList.add('hidden');
-        loadLemburView();
+        loadLemburView(); // Refresh data
     } catch(error) { 
         console.error("Gagal submit lembur:", error);
-        // Pesan error lebih jelas
-        showNotification('error', 'Gagal Mengirim', 'Terjadi kesalahan saat menghubungi server. Pastikan Google Apps Script sudah mendukung fitur "ajukanLembur".'); 
+        // Pesan error lebih spesifik untuk membantu debugging
+        showNotification('error', 'Gagal Mengirim', 'Terjadi kesalahan. Pastikan Google Apps Script (Backend) sudah ditambahkan fungsi "ajukanLembur".'); 
     } finally { 
         hideLoader(); 
     }
